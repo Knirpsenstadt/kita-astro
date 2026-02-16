@@ -1,0 +1,159 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const sponsors = await getCollection('sponsors');
+---
+
+<BaseLayout title="Sponsoren/Großspender">
+  <h1 class="text-2xl font-bold mb-6">Sponsoren/Großspender</h1>
+  
+  <p class="mb-6">
+    Wir danken unseren Sponsoren und Großspendern für ihre großzügige Unterstützung! 
+    Durch ihr Engagement können wir unsere Kita und die Angebote für unsere Kinder stetig verbessern.
+  </p>
+  
+  <div class="sponsors-container">
+    {sponsors.length > 0 ? (
+      sponsors.map(sponsor => (
+        <div class="sponsor-card">
+          {sponsor.data.logo && (
+            <div class="sponsor-logo">
+              <img src={sponsor.data.logo} alt={`${sponsor.data.name} Logo`} />
+            </div>
+          )}
+          <div class="sponsor-content">
+            <h3 class="sponsor-name">
+              {sponsor.data.website ? (
+                <a href={sponsor.data.website} target="_blank" rel="noopener noreferrer">
+                  {sponsor.data.name}
+                </a>
+              ) : (
+                sponsor.data.name
+              )}
+            </h3>
+            {sponsor.data.description && (
+              <p class="sponsor-description">{sponsor.data.description}</p>
+            )}
+            {sponsor.data.support && (
+              <div class="sponsor-support">
+                <strong>Unterstützung:</strong> {sponsor.data.support}
+              </div>
+            )}
+            {sponsor.data.website && (
+              <p class="sponsor-website">
+                <a href={sponsor.data.website} target="_blank" rel="noopener noreferrer">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                  Website besuchen
+                </a>
+              </p>
+            )}
+          </div>
+        </div>
+      ))
+    ) : (
+      <p class="no-sponsors">Derzeit sind noch keine Sponsoren eingetragen.</p>
+    )}
+  </div>
+  
+  <hr class="my-8" />
+  
+  <h2 class="text-xl font-bold mb-4">Sie möchten Sponsor oder Spender werden?</h2>
+  <p>
+    Wir freuen uns über jede Form der Unterstützung! Wenn Sie die Kita Knirpsenstadt als Sponsor unterstützen möchten, 
+    nehmen Sie gerne <a href="/impressum/" class="text-blue-600 hover:underline">Kontakt</a> mit uns auf.
+  </p>
+</BaseLayout>
+
+<style>
+  .sponsors-container {
+    display: grid;
+    gap: 16px;
+  }
+  
+  .sponsor-card {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+  }
+  
+  @media (max-width: 640px) {
+    .sponsor-card {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+  }
+  
+  .sponsor-logo {
+    flex-shrink: 0;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f5fbe9;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .sponsor-logo img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+  
+  .sponsor-content {
+    flex: 1;
+  }
+  
+  .sponsor-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  
+  .sponsor-name a {
+    color: var(--ink-700);
+    text-decoration: none;
+  }
+  
+  .sponsor-name a:hover {
+    color: var(--brand-600);
+    text-decoration: underline;
+  }
+  
+  .sponsor-description {
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  
+  .sponsor-support {
+    font-size: 0.9rem;
+    color: var(--ink-700);
+    margin-bottom: 8px;
+  }
+  
+  .sponsor-website a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--brand-600);
+    text-decoration: none;
+  }
+  
+  .sponsor-website a:hover {
+    text-decoration: underline;
+  }
+  
+  .no-sponsors {
+    text-align: center;
+    padding: 32px;
+    color: var(--muted);
+    font-style: italic;
+  }
+</style>

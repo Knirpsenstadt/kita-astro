@@ -1,0 +1,31 @@
+fragment PagesParts on Pages {
+  __typename
+  title
+  permalink
+  showBadge
+  menuOrder
+  body
+}
+
+fragment EventsParts on Events {
+  __typename
+  label
+  type
+  start
+  end
+}
+
+fragment SponsorsParts on Sponsors {
+  __typename
+  name
+  logo
+  website
+  description
+  support
+}
+
+fragment HomeParts on Home {
+  __typename
+  title
+  body
+}

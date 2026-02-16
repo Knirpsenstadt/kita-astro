@@ -1,10 +1,26 @@
 ---
+import { getCollection } from 'astro:content';
+
 interface Props {
   title: string;
   description?: string;
 }
 
 const { title, description = 'Elternverein Knirpsenstadt e.V.' } = Astro.props;
+
+const pages = await getCollection('pages');
+const sortedPages = pages
+  .filter(p => p.data.menuOrder !== -1)
+  .sort((a, b) => (a.data.menuOrder || 999) - (b.data.menuOrder || 999));
+
+const navItems = [
+  ...sortedPages.map((page) => ({
+    href: page.data.permalink || `/${page.id}`,
+    label: page.data.title,
+    badge: false,
+  })),
+  { href: '/sponsoren/', label: 'Sponsoren/Spender', badge: true },
+];
 ---
 
 <!doctype html>
@@ -21,65 +37,61 @@ const { title, description = 'Elternverein Knirpsenstadt e.V.' } = Astro.props;
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <title>{title} | Kita Knirpsenstadt</title>
   </head>
-  <body class="min-h-screen pb-16">
-    <header class="navbar bg-[#DAEFB4] shadow-sm sticky top-0 z-50">
+  <body class="min-h-screen pb-20">
+    <header class="navbar bg-[#DAEFB4] shadow-sm sticky top-0 z-50 px-4 lg:px-6">
       <div class="navbar-start">
-        <div class="dropdown">
-          <label tabindex="0" class="btn btn-ghost lg:hidden">
-            <i class="fas fa-bars text-xl"></i>
-          </label>
-          <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
-            <li><a href="/">Startseite</a></li>
-            <li><a href="/paedagogischer-ansatz">Pädagogischer Ansatz</a></li>
-            <li><a href="/team">Team</a></li>
-            <li><a href="/kalender">Kalender</a></li>
-            <li><a href="/vereinsleben">Vereinsleben</a></li>
-            <li><a href="/sponsoren">Sponsoren</a></li>
-            <li><a href="/dokumente">Dokumente</a></li>
-            <li><a href="/beitragsrechner">Beitragsrechner</a></li>
-            <li><a href="/offene-stellen">Offene Stellen</a></li>
-          </ul>
-        </div>
-        <a href="/" class="btn btn-ghost text-xl normal-case">
-          <img src="/img/logo.jpg" alt="Kita Knirpsenstadt" class="h-10 w-10 rounded-full mr-2" />
-          <span class="hidden sm:inline">Knirpsenstadt</span>
+        <a href="/" class="btn btn-ghost text-xl normal-case gap-2">
+          <img src="/img/logo.jpg" alt="Kita Knirpsenstadt" class="h-12 w-12 rounded-full" />
+          <span class="hidden sm:inline text-lg font-bold">Kita Knirpsenstadt e.V.</span>
         </a>
       </div>
-      <div class="navbar-center hidden lg:flex">
-        <ul class="menu menu-horizontal px-1 text-base">
-          <li><a href="/paedagogischer-ansatz">Pädagogik</a></li>
-          <li><a href="/team">Team</a></li>
-          <li><a href="/kalender">Kalender</a></li>
-          <li><a href="/vereinsleben">Verein</a></li>
-          <li><a href="/sponsoren">Sponsoren</a></li>
-          <li><a href="/dokumente">Dokumente</a></li>
-          <li><a href="/beitragsrechner" class="font-semibold">Beitragsrechner</a></li>
+      
+      <div class="navbar-center hidden xl:flex">
+        <ul class="menu menu-horizontal px-1 text-base gap-0">
+          {navItems.map((item) => (
+            <li>
+              <a href={item.href} class="px-3 xl:px-4">
+                {item.label}
+                {item.badge && <sup> 🔴</sup>}
+              </a>
+            </li>
+          ))}
         </ul>
       </div>
+      
       <div class="navbar-end">
-        <a href="mailto:leitung@knirpsenstadt.de" class="btn btn-sm btn-ghost">
-          <i class="fas fa-envelope"></i>
-          <span class="hidden sm:inline">Kontakt</span>
-        </a>
+        <div class="dropdown dropdown-end">
+          <label tabindex="0" class="btn btn-ghost xl:hidden">
+            <i class="fas fa-bars text-xl"></i>
+          </label>
+          <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-56 right-0">
+            <li><a href="/">Startseite</a></li>
+            {navItems.map((item) => (
+              <li>
+                <a href={item.href}>
+                  {item.label}
+                  {item.badge && <sup> 🔴</sup>}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </header>
 
-    <main class="container mx-auto px-4 py-6 max-w-6xl">
+    <main class="container mx-auto px-4 lg:px-6 py-8 max-w-6xl">
       <slot />
     </main>
 
-    <footer class="fixed bottom-0 left-0 right-0 bg-[#DAEFB4] py-3 text-center text-sm z-40">
-      <p>
-        <a href="/impressum" class="hover:underline">Impressum</a>
-        <span class="mx-2">|</span>
-        Elternverein Knirpsenstadt e.V.
-      </p>
+    <footer class="fixed bottom-0 left-0 right-0 bg-[#DAEFB4] py-4 text-center z-40">
+      <p class="text-base mb-0">Elternverein Knirpsenstadt e.V.</p>
+      <a href="/impressum" class="hover:underline font-medium text-base">Kontakt &amp; Impressum</a>
     </footer>
   </body>
 </html>
 
 <style is:global>
-  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
   
   :root {
     --brand-50: #f5fbe9;
@@ -94,13 +106,46 @@ const { title, description = 'Elternverein Knirpsenstadt e.V.' } = Astro.props;
   
   html {
     font-family: 'Nunito', sans-serif;
+    font-size: 17px;
   }
   
   body {
     background: linear-gradient(180deg, #ffffff 0%, #fbfdff 60%, #f6fbff 100%);
+    line-height: 1.7;
   }
   
   .btn {
     text-transform: none;
+    font-size: 1rem;
+  }
+  
+  h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+  
+  h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+  }
+  
+  p {
+    margin-bottom: 1rem;
+  }
+  
+  a {
+    color: #5d9847;
+  }
+  
+  a:hover {
+    color: #4a7a3a;
   }
 </style>

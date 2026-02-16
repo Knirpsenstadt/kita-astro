@@ -1,0 +1,145 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import eventsListScript from '../scripts/events-list.js?raw';
+import { toYMD } from '../utils/date';
+
+const events = await getCollection('events');
+const eventsData = events.map(e => ({
+  label: e.data.label,
+  type: e.data.type,
+  start: toYMD(e.data.start),
+  end: toYMD(e.data.end || e.data.start)
+}));
+---
+
+<BaseLayout title="Kalender">
+  <h1 class="text-2xl font-bold mb-6">Kalender</h1>
+  
+  <div id="events-list" data-events-list>
+    <script type="application/json" data-events set:html={JSON.stringify({ events: eventsData })}></script>
+  </div>
+</BaseLayout>
+
+<script define:vars={{ eventsListScript }}>
+  const script = document.createElement('script');
+  script.textContent = eventsListScript;
+  document.head.appendChild(script);
+</script>
+
+<style is:global>
+  #events-list {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 16px;
+  }
+  
+  .events-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  
+  .events-filter {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .filter-btn {
+    padding: 4px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #fff;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+  
+  .filter-btn.active {
+    background: var(--brand-50);
+    border-color: var(--brand-100);
+  }
+  
+  .events-list {
+    display: grid;
+    gap: 8px;
+  }
+  
+  .event-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+  }
+  
+  .event-item:hover {
+    background: #f9fafb;
+  }
+  
+  .event-date {
+    min-width: 80px;
+    text-align: center;
+    padding: 8px;
+    background: var(--brand-50);
+    border-radius: 8px;
+  }
+  
+  .event-date .day {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--ink-700);
+  }
+  
+  .event-date .month {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  
+  .event-content {
+    flex: 1;
+  }
+  
+  .event-title {
+    font-weight: 600;
+    color: var(--ink-700);
+  }
+  
+  .event-duration {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  
+  .event-type {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  
+  .event-type.closure {
+    background: #ffd1d1;
+    color: #c53030;
+  }
+  
+  .event-type.festivity {
+    background: #ccebd7;
+    color: #276749;
+  }
+  
+  .event-type.event {
+    background: #d6e8ff;
+    color: #2b6cb0;
+  }
+  
+  .no-events {
+    text-align: center;
+    padding: 32px;
+    color: var(--muted);
+  }
+</style>

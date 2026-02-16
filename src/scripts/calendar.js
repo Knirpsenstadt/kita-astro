@@ -1,23 +1,32 @@
 (function(){
   function qs(sel, el){ return (el||document).querySelector(sel); }
   function qsa(sel, el){ return Array.from((el||document).querySelectorAll(sel)); }
-  
+  // Format date as YYYY-MM-DD in local time (avoid UTC shift)
   function fmtDate(d){
     const y = d.getFullYear();
     const m = String(d.getMonth()+1).padStart(2,'0');
     const day = String(d.getDate()).padStart(2,'0');
     return `${y}-${m}-${day}`;
   }
-  
   function addDays(date, n){ const d=new Date(date); d.setDate(d.getDate()+n); return d; }
-  
+  // Parse 'YYYY-MM-DD' as local date (no timezone shift)
   function parseYMD(s){
     if(!s) return null;
-    const [y,m,d] = String(s).split('-').map(Number);
-    return new Date(y, (m||1)-1, d||1);
+    const value = String(s).trim();
+    const ymdMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(ymdMatch){
+      const y = Number(ymdMatch[1]);
+      const m = Number(ymdMatch[2]);
+      const d = Number(ymdMatch[3]);
+      return new Date(y, m - 1, d);
+    }
+    const parsed = new Date(value);
+    if(Number.isNaN(parsed.getTime())) return null;
+    return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
   }
 
   function parseRanges(data){
+    // data: { events: [{label, type, start, end?}] } OR array fallback
     const list = Array.isArray(data) ? data : (data && data.events) ? data.events : [];
     return (list||[]).map(e=>({
       label: e.label,
@@ -39,7 +48,7 @@
     const dataEl = qs('[data-events]', container);
     let closures = [];
     if(dataEl){
-      try { closures = JSON.parse(dataEl.textContent || '{}'); } catch(err){}
+      try { closures = JSON.parse(dataEl.textContent); } catch(err){}
     }
     const ranges = parseRanges(closures);
 
@@ -48,26 +57,28 @@
     let viewYear = today.getFullYear();
     let viewMonth = today.getMonth();
 
-    const header = document.createElement('div');
-    header.className = 'cal-header';
-    const title = document.createElement('div'); title.className='cal-title';
-    const navGroup = document.createElement('div'); navGroup.className = 'cal-nav-group';
-    const prev = document.createElement('button'); prev.type='button'; prev.className='cal-nav prev'; prev.setAttribute('aria-label','Vorheriger Monat'); prev.textContent='‹';
-    const todayBtn = document.createElement('button'); todayBtn.type='button'; todayBtn.className='cal-nav today'; todayBtn.setAttribute('aria-label','Zum heutigen Monat springen'); todayBtn.textContent='Heute';
-    const next = document.createElement('button'); next.type='button'; next.className='cal-nav next'; next.setAttribute('aria-label','Nächster Monat'); next.textContent='›';
+  // Header mit Titel links und Steuerungsgruppe rechts (‹ Heute ›)
+  const header = document.createElement('div');
+  header.className = 'cal-header';
+  const title = document.createElement('div'); title.className='cal-title';
+  const navGroup = document.createElement('div'); navGroup.className = 'cal-nav-group';
+  const prev = document.createElement('button'); prev.type='button'; prev.className='cal-nav prev'; prev.setAttribute('aria-label','Vorheriger Monat'); prev.textContent='‹';
+  const todayBtn = document.createElement('button'); todayBtn.type='button'; todayBtn.className='cal-nav today'; todayBtn.setAttribute('aria-label','Zum heutigen Monat springen'); todayBtn.textContent='Heute';
+  const next = document.createElement('button'); next.type='button'; next.className='cal-nav next'; next.setAttribute('aria-label','Nächster Monat'); next.textContent='›';
 
-    const listLink = document.createElement('a');
-    listLink.href = '/kalender/';
-    listLink.className = 'cal-list-link';
-    listLink.setAttribute('aria-label', 'Zur Listenansicht');
-    listLink.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>';
+  // Listen-Icon Link
+  const listLink = document.createElement('a');
+  listLink.href = '/kalender/';
+  listLink.className = 'cal-list-link';
+  listLink.setAttribute('aria-label', 'Zur Listenansicht');
+  listLink.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>';
 
-    navGroup.append(prev, todayBtn, next, listLink);
-    header.append(title, navGroup);
+  navGroup.append(prev, todayBtn, next, listLink);
+  header.append(title, navGroup);
 
     const grid = document.createElement('div'); grid.className='cal-grid';
-    const legend = document.createElement('div'); legend.className='cal-legend';
-    legend.innerHTML = '<span class="badge closed"></span>Schließzeit <span class="badge festivity"></span>Fest <span class="badge event"></span>Termin';
+  const legend = document.createElement('div'); legend.className='cal-legend';
+  legend.innerHTML = '<span class="badge closed"></span>Schließzeit <span class="badge festivity"></span>Fest <span class="badge event"></span>Termin';
 
     container.innerHTML='';
     container.append(header, grid, legend);
@@ -83,7 +94,8 @@
         const h = document.createElement('div'); h.className='cal-cell cal-head'; h.textContent=d; grid.appendChild(h);
       });
 
-      function createDayCell(d, isOutside){
+      // Helper to create a day cell; mark outside-of-month if needed
+    function createDayCell(d, isOutside){
         const cell = document.createElement('button');
         cell.type='button';
         cell.className='cal-cell cal-day' + (isOutside ? ' cal-out' : '');
@@ -93,8 +105,9 @@
         if(fmtDate(d)===fmtDate(today)) cell.classList.add('today');
         const hits = ranges.filter(r=>inRange(d,r));
         if(hits.length){
+          // Precedence: closure > festivity > event
           let dayType = null;
-          if(hits.some(h=>h.type==='closure')) dayType = 'closed';
+          if(hits.some(h=>h.type==='closure')) dayType = 'closed'; // CSS uses .closed
           else if(hits.some(h=>h.type==='festivity')) dayType = 'festivity';
           else if(hits.some(h=>h.type==='event')) dayType = 'event';
           if(dayType) cell.classList.add(dayType);
@@ -106,9 +119,10 @@
         grid.appendChild(cell);
       }
 
-      const firstWeekday = (first.getDay()+6)%7;
+      // start at Monday; render leading days from previous month instead of pads
+      const firstWeekday = (first.getDay()+6)%7; // 0=Mo
       if(firstWeekday>0){
-        const prevMonthLast = new Date(viewYear, viewMonth, 0);
+        const prevMonthLast = new Date(viewYear, viewMonth, 0); // last day of previous month
         const startDay = prevMonthLast.getDate() - firstWeekday + 1;
         for(let day=startDay; day<=prevMonthLast.getDate(); day++){
           const d = new Date(viewYear, viewMonth-1, day);
@@ -116,11 +130,13 @@
         }
       }
 
+      // current month days
       for(let d=new Date(first); d<=last; d=addDays(d,1)){
         createDayCell(d, false);
       }
 
-      const lastWeekday = (last.getDay()+6)%7;
+      // trailing days from next month to complete the final week (if needed)
+      const lastWeekday = (last.getDay()+6)%7; // 0=Mo, 6=So
       if(lastWeekday<6){
         const need = 6 - lastWeekday;
         for(let i=1; i<=need; i++){
@@ -137,6 +153,7 @@
       viewYear = now.getFullYear();
       viewMonth = now.getMonth();
       render();
+      // Fokus auf heutigen Tag setzen, wenn sichtbar
       const todayCell = container.querySelector('.cal-day.today');
       if(todayCell) todayCell.focus();
     });

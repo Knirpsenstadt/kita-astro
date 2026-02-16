@@ -198,7 +198,7 @@ input[type="number"], select {
   border-top: 1px solid #ddd;
 }
 
-.hidden {
+.calculator .hidden {
   display: none;
 }
 

@@ -22,7 +22,7 @@ const sliderImages = [
   <div class="my-slider">
     {sliderImages.map((src) => (
       <div>
-        <img src={src} alt="Kita impression" loading="lazy" class="w-full h-64 object-cover rounded-xl" />
+        <img src={src} alt="Kita impression" loading="lazy" class="w-full object-cover rounded-xl" />
       </div>
     ))}
   </div>
@@ -34,17 +34,23 @@ const sliderImages = [
       <i class="fas fa-chevron-right" aria-hidden="true"></i>
     </button>
   </div>
+  <div class="slider-dots" aria-label="Bildauswahl"></div>
 </div>
 
-<style>
+<style is:global>
   .slider-wrap {
+    position: relative;
+    border-radius: 14px;
+  }
+
+  .my-slider {
     position: relative;
     border-radius: 14px;
     overflow: hidden;
   }
 
-  .my-slider {
-    position: relative;
+  .my-slider img {
+    height: clamp(300px, 42vw, 475px);
   }
 
   .slider-controls {
@@ -81,61 +87,117 @@ const sliderImages = [
     transform: scale(1.1);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
+
+  .slider-dots {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .slider-dot {
+    width: 12px;
+    height: 12px;
+    border: 0;
+    border-radius: 999px;
+    background: #cfcfcf;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+  }
+
+  .slider-dot:hover {
+    transform: scale(1.05);
+  }
+
+  .slider-dot.active {
+    background: #4b5563;
+  }
 </style>
 
 <script>
   // Simple vanilla JS slider
   document.addEventListener('DOMContentLoaded', () => {
-    const slider = document.querySelector('.my-slider');
-    if (!slider) return;
-    
-    const slides = slider.children;
-    const totalSlides = slides.length;
-    let currentSlide = 0;
-    let autoplayInterval: ReturnType<typeof setInterval>;
+    document.querySelectorAll('.slider-wrap').forEach((wrapper) => {
+      const slider = wrapper.querySelector('.my-slider');
+      if (!slider) return;
 
-    function showSlide(index: number) {
-      Array.from(slides).forEach((slide, i) => {
-        (slide as HTMLElement).style.display = i === index ? 'block' : 'none';
+      const slides = slider.children;
+      const totalSlides = slides.length;
+      let currentSlide = 0;
+      let autoplayInterval: ReturnType<typeof setInterval>;
+
+      const dotsContainer = wrapper.querySelector('.slider-dots');
+      const dots = [];
+      if (dotsContainer) {
+        for (let i = 0; i < totalSlides; i++) {
+          const dot = document.createElement('button');
+          dot.type = 'button';
+          dot.className = 'slider-dot';
+          dot.setAttribute('aria-label', `Zu Bild ${i + 1}`);
+          dotsContainer.appendChild(dot);
+          dots.push(dot);
+        }
+      }
+
+      function updateDots(index: number) {
+        dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
+      }
+
+      function showSlide(index: number) {
+        Array.from(slides).forEach((slide, i) => {
+          (slide as HTMLElement).style.display = i === index ? 'block' : 'none';
+        });
+        updateDots(index);
+      }
+
+      function nextSlide() {
+        currentSlide = (currentSlide + 1) % totalSlides;
+        showSlide(currentSlide);
+      }
+
+      function prevSlide() {
+        currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+        showSlide(currentSlide);
+      }
+
+      function startAutoplay() {
+        autoplayInterval = setInterval(nextSlide, 5000);
+      }
+
+      function stopAutoplay() {
+        clearInterval(autoplayInterval);
+      }
+
+      // Initialize
+      showSlide(0);
+      startAutoplay();
+
+      // Controls
+      const prevBtn = wrapper.querySelector('[data-controls="prev"]');
+      const nextBtn = wrapper.querySelector('[data-controls="next"]');
+
+      prevBtn?.addEventListener('click', () => {
+        stopAutoplay();
+        prevSlide();
+        startAutoplay();
       });
-    }
 
-    function nextSlide() {
-      currentSlide = (currentSlide + 1) % totalSlides;
-      showSlide(currentSlide);
-    }
+      nextBtn?.addEventListener('click', () => {
+        stopAutoplay();
+        nextSlide();
+        startAutoplay();
+      });
 
-    function prevSlide() {
-      currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
-      showSlide(currentSlide);
-    }
-
-    function startAutoplay() {
-      autoplayInterval = setInterval(nextSlide, 5000);
-    }
-
-    function stopAutoplay() {
-      clearInterval(autoplayInterval);
-    }
-
-    // Initialize
-    showSlide(0);
-    startAutoplay();
-
-    // Controls
-    const prevBtn = document.querySelector('[data-controls="prev"]');
-    const nextBtn = document.querySelector('[data-controls="next"]');
-
-    prevBtn?.addEventListener('click', () => {
-      stopAutoplay();
-      prevSlide();
-      startAutoplay();
-    });
-
-    nextBtn?.addEventListener('click', () => {
-      stopAutoplay();
-      nextSlide();
-      startAutoplay();
+      dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => {
+          stopAutoplay();
+          currentSlide = index;
+          showSlide(currentSlide);
+          startAutoplay();
+        });
+      });
     });
   });
 </script>

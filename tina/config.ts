@@ -19,11 +19,7 @@ export default defineConfig({
     },
   },
   
-  admin: {
-    auth: {
-      useLocalAuth: true,
-    },
-  },
+
   
   schema: {
     collections: [
