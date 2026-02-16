@@ -1,0 +1,106 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'Elternverein Knirpsenstadt e.V.' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="de" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <title>{title} | Kita Knirpsenstadt</title>
+  </head>
+  <body class="min-h-screen pb-16">
+    <header class="navbar bg-[#DAEFB4] shadow-sm sticky top-0 z-50">
+      <div class="navbar-start">
+        <div class="dropdown">
+          <label tabindex="0" class="btn btn-ghost lg:hidden">
+            <i class="fas fa-bars text-xl"></i>
+          </label>
+          <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+            <li><a href="/">Startseite</a></li>
+            <li><a href="/paedagogischer-ansatz">Pädagogischer Ansatz</a></li>
+            <li><a href="/team">Team</a></li>
+            <li><a href="/kalender">Kalender</a></li>
+            <li><a href="/vereinsleben">Vereinsleben</a></li>
+            <li><a href="/sponsoren">Sponsoren</a></li>
+            <li><a href="/dokumente">Dokumente</a></li>
+            <li><a href="/beitragsrechner">Beitragsrechner</a></li>
+            <li><a href="/offene-stellen">Offene Stellen</a></li>
+          </ul>
+        </div>
+        <a href="/" class="btn btn-ghost text-xl normal-case">
+          <img src="/img/logo.jpg" alt="Kita Knirpsenstadt" class="h-10 w-10 rounded-full mr-2" />
+          <span class="hidden sm:inline">Knirpsenstadt</span>
+        </a>
+      </div>
+      <div class="navbar-center hidden lg:flex">
+        <ul class="menu menu-horizontal px-1 text-base">
+          <li><a href="/paedagogischer-ansatz">Pädagogik</a></li>
+          <li><a href="/team">Team</a></li>
+          <li><a href="/kalender">Kalender</a></li>
+          <li><a href="/vereinsleben">Verein</a></li>
+          <li><a href="/sponsoren">Sponsoren</a></li>
+          <li><a href="/dokumente">Dokumente</a></li>
+          <li><a href="/beitragsrechner" class="font-semibold">Beitragsrechner</a></li>
+        </ul>
+      </div>
+      <div class="navbar-end">
+        <a href="mailto:leitung@knirpsenstadt.de" class="btn btn-sm btn-ghost">
+          <i class="fas fa-envelope"></i>
+          <span class="hidden sm:inline">Kontakt</span>
+        </a>
+      </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-6 max-w-6xl">
+      <slot />
+    </main>
+
+    <footer class="fixed bottom-0 left-0 right-0 bg-[#DAEFB4] py-3 text-center text-sm z-40">
+      <p>
+        <a href="/impressum" class="hover:underline">Impressum</a>
+        <span class="mx-2">|</span>
+        Elternverein Knirpsenstadt e.V.
+      </p>
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
+  
+  :root {
+    --brand-50: #f5fbe9;
+    --brand-100: #eaf6d3;
+    --brand-400: #c9ebb2;
+    --brand-600: #86c06a;
+    --ink-700: #1f2937;
+    --muted: #4b5563;
+    --border: #e7eff7;
+    --shadow: 0 8px 24px rgba(16,24,40,.08), 0 2px 6px rgba(16,24,40,.04);
+  }
+  
+  html {
+    font-family: 'Nunito', sans-serif;
+  }
+  
+  body {
+    background: linear-gradient(180deg, #ffffff 0%, #fbfdff 60%, #f6fbff 100%);
+  }
+  
+  .btn {
+    text-transform: none;
+  }
+</style>

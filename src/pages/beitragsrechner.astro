@@ -1,0 +1,93 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import feeCalculatorScript from '../scripts/beitragsrechner.js?raw';
+---
+
+<BaseLayout title="Beitragsrechner">
+  <link rel="stylesheet" href="/styles/beitragsrechner.css" />
+  
+  <h1 class="text-2xl font-bold mb-6">Beitragsrechner</h1>
+  
+  <div class="calculator">
+    <div class="form-group">
+      <span class="label">Alter des Kindes:</span>
+      <div class="inline-options" role="radiogroup" aria-label="Alter des Kindes">
+        <label class="option"><input type="radio" name="childAge" value="krippe" checked /><span>Krippe (unter 3 Jahre)</span></label>
+        <label class="option"><input type="radio" name="childAge" value="kindergarten" /><span>Kindergarten (ab 3 Jahre)</span></label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="netIncome">Jährliches Haushalts-Netto-Einkommen (EUR):</label>
+      <input type="number" id="netIncome" min="0" value="43795" />
+      <label class="highest-option">
+        <input type="checkbox" id="highestRate" /> Höchstsatz
+        <button type="button" class="info-icon" aria-expanded="false" aria-controls="highestRateInfo" title="Setzt den höchsten Beitrag laut Satzung an.">i</button>
+        <div id="highestRateInfo" class="info-popover" role="dialog">
+          Setzt den höchsten Beitrag laut Satzung an. Die Einkommensprüfung entfällt.
+        </div>
+      </label>
+    </div>
+
+    <div class="form-group">
+      <span class="label">Anzahl unterhaltsberechtigter Kinder (inkl. dieses Kind):</span>
+      <div class="inline-options" role="radiogroup" aria-label="Anzahl Kinder">
+        <label class="option"><input type="radio" name="siblings" value="1" checked /><span>1</span></label>
+        <label class="option"><input type="radio" name="siblings" value="2" /><span>2</span></label>
+        <label class="option"><input type="radio" name="siblings" value="3" /><span>3</span></label>
+        <label class="option"><input type="radio" name="siblings" value="4" /><span>4</span></label>
+        <label class="option"><input type="radio" name="siblings" value="5" /><span>5</span></label>
+        <label class="option"><input type="radio" name="siblings" value="6" /><span>6</span></label>
+        <label class="option"><input type="radio" name="siblings" value="7" /><span>7+</span></label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <span class="label">Wöchentliche Betreuungszeit:</span>
+      <div class="inline-options" role="radiogroup" aria-label="Wöchentliche Betreuungszeit">
+        <label class="option"><input type="radio" name="careHours" value="30" checked /><span>30h</span></label>
+        <label class="option"><input type="radio" name="careHours" value="35" /><span>35h</span></label>
+        <label class="option"><input type="radio" name="careHours" value="40" /><span>40h</span></label>
+        <label class="option"><input type="radio" name="careHours" value="45" /><span>45h</span></label>
+        <label class="option"><input type="radio" name="careHours" value="50" /><span>50h</span></label>
+        <label class="option"><input type="radio" name="careHours" value="55" /><span>55h</span></label>
+      </div>
+    </div>
+
+    <button id="calculateButton">Platzgeld berechnen</button>
+
+    <div id="resultSection" class="result hidden">
+      <h2>Berechnetes Platzgeld</h2>
+      <div class="amount" id="feeResult">-- EUR</div>
+      <div class="info">Monatlicher Betrag ohne Essensgeld</div>
+
+      <div id="feeExplanation" class="explanation"></div>
+
+      <div id="entlastungsLink" class="hidden">
+        <p><a href="https://mbjs.brandenburg.de/kinder-und-jugend/kindertagesbetreuung/kita-elternbeitragsentlastung.html" target="_blank">Mehr Informationen zur Kita-Elternbeitragsentlastung in Brandenburg</a></p>
+      </div>
+
+      <div class="total-section">
+        <h3>Gesamtkosten pro Monat</h3>
+        <div class="amount" id="totalCost">-- EUR</div>
+        <div class="info">Inklusive Essensgeld (pauschal <span id="foodCostDisplay">45,40 EUR</span>)</div>
+      </div>
+
+      <div class="payment-info">
+        <p>Bitte beachten: Platz- und Essensgeld müssen in getrennten Zahlungen bis zum 5. eines Monats bezahlt werden.</p>
+      </div>
+    </div>
+
+    <p class="disclaimer">
+      Diese Berechnung dient der Orientierung. Die tatsächlichen Kosten können abweichen.<br/>
+      Zur Einstufung des Beitrags sind Unterlagen wie Einkommensnachweise und ggf. Bescheinigungen über Sozialleistungen erforderlich.
+      Es ist auch möglich freiwillig den Höchstsatz zu zahlen, dann entfällt die Einkommensprüfung.
+    </p>
+  </div>
+</BaseLayout>
+
+<script define:vars={{ feeCalculatorScript }}>
+  const script = document.createElement('script');
+  script.textContent = feeCalculatorScript;
+  document.body.appendChild(script);
+</script>

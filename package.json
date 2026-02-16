@@ -1,0 +1,28 @@
+{
+  "name": "kita-astro",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "tinacms dev -c \"astro dev\" --noTelemetry",
+    "build": "astro build",
+    "build:tina": "tinacms build && astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "tina:dev": "tinacms dev -c \"astro dev\" --noTelemetry"
+  },
+  "dependencies": {
+    "astro": "^5.17.1",
+    "@astrojs/tailwind": "^6.0.0",
+    "@astrojs/react": "^4.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwindcss": "^3.4.0",
+    "daisyui": "^4.12.0",
+    "tinacms": "^3.4.1"
+  },
+  "devDependencies": {
+    "@tinacms/cli": "^2.1.5",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0"
+  }
+}

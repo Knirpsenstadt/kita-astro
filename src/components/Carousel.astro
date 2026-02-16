@@ -1,0 +1,141 @@
+---
+const sliderImages = [
+  '/img/slider/01_draussen.jpg',
+  '/img/slider/02_draussen.jpg',
+  '/img/slider/03_draussen.jpg',
+  '/img/slider/04_draussen.jpg',
+  '/img/slider/05_draussen.jpg',
+  '/img/slider/06_draussen.jpg',
+  '/img/slider/07_draussen.jpg',
+  '/img/slider/08_bad.jpg',
+  '/img/slider/09_baum.jpg',
+  '/img/slider/10_fenstbrett.jpg',
+  '/img/slider/11_flur.jpg',
+  '/img/slider/12_flur.jpg',
+  '/img/slider/13_flur.jpg',
+  '/img/slider/14_gruppenraum.jpg',
+  '/img/slider/15_gruppenraum.jpg',
+];
+---
+
+<div class="slider-wrap">
+  <div class="my-slider">
+    {sliderImages.map((src) => (
+      <div>
+        <img src={src} alt="Kita impression" loading="lazy" class="w-full h-64 object-cover rounded-xl" />
+      </div>
+    ))}
+  </div>
+  <div class="slider-controls" aria-label="Bildnavigation">
+    <button type="button" class="slider-arrow" data-controls="prev" aria-label="Vorheriges Bild">
+      <i class="fas fa-chevron-left" aria-hidden="true"></i>
+    </button>
+    <button type="button" class="slider-arrow" data-controls="next" aria-label="Nächstes Bild">
+      <i class="fas fa-chevron-right" aria-hidden="true"></i>
+    </button>
+  </div>
+</div>
+
+<style>
+  .slider-wrap {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .my-slider {
+    position: relative;
+  }
+
+  .slider-controls {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+    z-index: 10;
+    padding: 0 8px;
+  }
+
+  .slider-arrow {
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    border-radius: 999px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--ink-700);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .slider-arrow:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+</style>
+
+<script>
+  // Simple vanilla JS slider
+  document.addEventListener('DOMContentLoaded', () => {
+    const slider = document.querySelector('.my-slider');
+    if (!slider) return;
+    
+    const slides = slider.children;
+    const totalSlides = slides.length;
+    let currentSlide = 0;
+    let autoplayInterval: ReturnType<typeof setInterval>;
+
+    function showSlide(index: number) {
+      Array.from(slides).forEach((slide, i) => {
+        (slide as HTMLElement).style.display = i === index ? 'block' : 'none';
+      });
+    }
+
+    function nextSlide() {
+      currentSlide = (currentSlide + 1) % totalSlides;
+      showSlide(currentSlide);
+    }
+
+    function prevSlide() {
+      currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+      showSlide(currentSlide);
+    }
+
+    function startAutoplay() {
+      autoplayInterval = setInterval(nextSlide, 5000);
+    }
+
+    function stopAutoplay() {
+      clearInterval(autoplayInterval);
+    }
+
+    // Initialize
+    showSlide(0);
+    startAutoplay();
+
+    // Controls
+    const prevBtn = document.querySelector('[data-controls="prev"]');
+    const nextBtn = document.querySelector('[data-controls="next"]');
+
+    prevBtn?.addEventListener('click', () => {
+      stopAutoplay();
+      prevSlide();
+      startAutoplay();
+    });
+
+    nextBtn?.addEventListener('click', () => {
+      stopAutoplay();
+      nextSlide();
+      startAutoplay();
+    });
+  });
+</script>

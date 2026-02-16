@@ -1,0 +1,217 @@
+---
+import calendarScript from '../scripts/calendar.js?raw';
+
+const eventsData = [
+  { label: "Elternkennenlerncafé", type: "event", start: "2025-09-10" },
+  { label: "Elternversammlung", type: "event", start: "2025-10-15" },
+  { label: "Mitgliederversammlung", type: "event", start: "2025-10-15" },
+];
+---
+
+<div id="closures-calendar" data-calendar>
+  <script type="application/json" data-events set:html={JSON.stringify({ events: eventsData })}></script>
+  <div class="cal-details" aria-live="polite"></div>
+</div>
+
+<script define:vars={{ calendarScript }}>
+  // Inject calendar script
+  const script = document.createElement('script');
+  script.textContent = calendarScript;
+  document.head.appendChild(script);
+</script>
+
+<style>
+  #closures-calendar {
+    margin-top: 16px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 10px 12px 14px;
+  }
+
+  #closures-calendar .cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  #closures-calendar .cal-nav-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  #closures-calendar .cal-title {
+    font-weight: 700;
+    color: var(--ink-700);
+  }
+
+  #closures-calendar .cal-nav {
+    background: var(--brand-50);
+    border: 1px solid var(--brand-100);
+    color: var(--ink-700);
+    padding: 2px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  #closures-calendar .cal-nav:hover {
+    background: var(--brand-100);
+  }
+
+  #closures-calendar .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(34px, 1fr));
+    gap: 6px 8px;
+  }
+
+  #closures-calendar .cal-cell {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 6px;
+    color: var(--ink-700);
+    text-align: center;
+  }
+
+  #closures-calendar .cal-head {
+    background: var(--brand-50);
+    border-color: var(--brand-100);
+    font-weight: 700;
+  }
+
+  #closures-calendar .cal-day .num {
+    font-weight: 700;
+  }
+
+  #closures-calendar .cal-day.wknd {
+    background: #fcfdff;
+  }
+
+  #closures-calendar .cal-day.today {
+    outline: 2px solid var(--brand-400);
+  }
+
+  #closures-calendar .cal-day.cal-out {
+    opacity: 0.55;
+  }
+
+  #closures-calendar .cal-day.closed {
+    background: linear-gradient(0deg, rgba(255, 73, 73, 0.06), rgba(255, 73, 73, 0.06)), #fff;
+    border-color: #ffd1d1;
+  }
+
+  #closures-calendar .cal-day.festivity {
+    background: linear-gradient(0deg, rgba(134, 192, 106, 0.12), rgba(134, 192, 106, 0.12)), #fff;
+    border-color: #ccebd7;
+  }
+
+  #closures-calendar .cal-day.event {
+    background: linear-gradient(0deg, rgba(66, 133, 244, 0.12), rgba(66, 133, 244, 0.12)), #fff;
+    border-color: #cfe1ff;
+  }
+
+  #closures-calendar .cal-legend {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  #closures-calendar .badge.closed,
+  #closures-calendar .badge.festivity,
+  #closures-calendar .badge.event {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+
+  #closures-calendar .badge.closed {
+    background: #ffd1d1;
+    border: 1px solid #ffb4b4;
+  }
+
+  #closures-calendar .badge.festivity {
+    background: #dff3d6;
+    border: 1px solid #9ad9b7;
+  }
+
+  #closures-calendar .badge.event {
+    background: #d6e8ff;
+    border: 1px solid #a9c8ff;
+  }
+
+  #closures-calendar .cal-details {
+    margin-top: 10px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+
+  #closures-calendar .details-head {
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--ink-700);
+  }
+
+  #closures-calendar .details-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+  }
+
+  #closures-calendar .pill {
+    display: inline-block;
+    padding: 0 8px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    margin-right: 6px;
+  }
+
+  #closures-calendar .pill.closure {
+    background: #ffd1d1;
+    border: 1px solid #ffb4b4;
+  }
+
+  #closures-calendar .pill.festivity {
+    background: #ccebd7;
+    border: 1px solid #9ad9b7;
+  }
+
+  #closures-calendar .pill.event {
+    background: #d6e8ff;
+    border: 1px solid #a9c8ff;
+  }
+
+  .no-events {
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .cal-list-link {
+    background: var(--brand-50);
+    border: 1px solid var(--brand-100);
+    color: var(--ink-700);
+    padding: 4px 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.9rem;
+  }
+
+  .cal-list-link:hover {
+    background: var(--brand-100);
+  }
+</style>
