@@ -1,0 +1,176 @@
+---
+import { getIconPath } from '../lib/iconOptions'
+
+interface Props {
+  blocks?: any[]
+}
+
+const { blocks = [] } = Astro.props
+---
+
+{blocks.map((block: any) => {
+  if (block._template === 'heading') {
+    const Tag = block.level === 'h3' ? 'h3' : 'h2'
+    return <Tag>{block.headingText}</Tag>
+  }
+
+  if (block._template === 'paragraph') {
+    return <p>{block.bodyText}</p>
+  }
+
+  if (block._template === 'highlightBox') {
+    return (
+      <div class="highlight-box">
+        <p>{block.highlightText}</p>
+      </div>
+    )
+  }
+
+  if (block._template === 'featureGrid') {
+    return (
+      <div class="feature-grid">
+        {block.cards?.map((item: any) => {
+          const iconPath = getIconPath(item.icon)
+          if (item.href) {
+            return (
+              <a href={item.href} class="feature-card" style="text-decoration:none;" target={item.href.startsWith('http') ? '_blank' : undefined}>
+                <div class="feature-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d={iconPath}></path>
+                  </svg>
+                </div>
+                <div class="feature-content">
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
+                </div>
+              </a>
+            )
+          }
+
+          return (
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d={iconPath}></path>
+                </svg>
+              </div>
+              <div class="feature-content">
+                <h3>{item.title}</h3>
+                <p>{item.description}</p>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  if (block._template === 'educationGrid') {
+    return (
+      <div class="edu-grid">
+        {block.areas?.map((item: any) => (
+          <div class="edu-item">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d={getIconPath(item.icon, 'lightbulb')}></path>
+            </svg>
+            <span>{item.label}</span>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (block._template === 'iconList') {
+    return (
+      <ul class="icon-list">
+        {block.entries?.map((item: any) => (
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d={getIconPath(item.icon, 'sparkles')}></path>
+            </svg>
+            <span>{item.entryText}</span>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  if (block._template === 'twoColumns') {
+    return (
+      <div class="two-columns">
+        {block.columns?.map((column: any) => (
+          <div class="column-card">
+              <h3>{column.title}</h3>
+              <ul>
+              {column.bulletItems?.map((listItem: string) => <li>{listItem}</li>)}
+              </ul>
+            </div>
+          ))}
+      </div>
+    )
+  }
+
+  if (block._template === 'infoBox') {
+    return (
+      <div class="info-box">
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d={getIconPath(block.icon, 'info')}></path>
+          </svg>
+          {block.title}
+        </h3>
+        {block.infoText && <p>{block.infoText}</p>}
+        {block.bulletItems && block.bulletItems.length > 0 && (
+          <ul>
+            {block.bulletItems.map((item: string) => <li>{item}</li>)}
+          </ul>
+        )}
+      </div>
+    )
+  }
+
+  if (block._template === 'docGrid') {
+    return (
+      <div class="doc-grid">
+        {block.documents?.map((item: any) => (
+          <a href={item.href} class="doc-card" target="_blank" rel="noopener noreferrer">
+            <div class="doc-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d={getIconPath(item.icon, 'document')}></path>
+              </svg>
+            </div>
+            <div class="doc-content">
+              <h3>{item.title}</h3>
+              {item.description && <p>{item.description}</p>}
+              <span class="doc-badge">{item.badge || 'PDF'}</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    )
+  }
+
+  if (block._template === 'badge') {
+    return <span class="badge-green">{block.badgeText}</span>
+  }
+
+  if (block._template === 'separator') {
+    return <hr class="content-separator" />
+  }
+
+  if (block._template === 'centerNotice') {
+    return (
+      <div class="center-notice">
+        <div class="center-notice-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d={getIconPath(block.icon, 'info')}></path>
+          </svg>
+        </div>
+        <p class="center-notice-headline">{block.headline}</p>
+        {block.subline && <p class="center-notice-subline">{block.subline}</p>}
+      </div>
+    )
+  }
+
+  return null
+})}

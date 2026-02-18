@@ -96,12 +96,99 @@ type Collection {
 
 union DocumentNode = Pages | Events | Sponsors | Home | Folder
 
+type PagesBlocksHeading {
+  level: String
+  headingText: String!
+}
+
+type PagesBlocksParagraph {
+  bodyText: String!
+}
+
+type PagesBlocksHighlightBox {
+  highlightText: String!
+}
+
+type PagesBlocksFeatureGridCards {
+  title: String!
+  description: String!
+  icon: String!
+  href: String
+}
+
+type PagesBlocksFeatureGrid {
+  cards: [PagesBlocksFeatureGridCards]
+}
+
+type PagesBlocksEducationGridAreas {
+  label: String!
+  icon: String!
+}
+
+type PagesBlocksEducationGrid {
+  areas: [PagesBlocksEducationGridAreas]
+}
+
+type PagesBlocksIconListEntries {
+  entryText: String!
+  icon: String!
+}
+
+type PagesBlocksIconList {
+  entries: [PagesBlocksIconListEntries]
+}
+
+type PagesBlocksTwoColumnsColumns {
+  title: String!
+  bulletItems: [String]
+}
+
+type PagesBlocksTwoColumns {
+  columns: [PagesBlocksTwoColumnsColumns]
+}
+
+type PagesBlocksInfoBox {
+  title: String!
+  icon: String!
+  infoText: String
+  bulletItems: [String]
+}
+
+type PagesBlocksDocGridDocuments {
+  title: String!
+  description: String
+  href: String!
+  icon: String!
+  badge: String
+}
+
+type PagesBlocksDocGrid {
+  documents: [PagesBlocksDocGridDocuments]
+}
+
+type PagesBlocksBadge {
+  badgeText: String!
+}
+
+type PagesBlocksSeparator {
+  variant: String!
+}
+
+type PagesBlocksCenterNotice {
+  icon: String!
+  headline: String!
+  subline: String
+}
+
+union PagesBlocks = PagesBlocksHeading | PagesBlocksParagraph | PagesBlocksHighlightBox | PagesBlocksFeatureGrid | PagesBlocksEducationGrid | PagesBlocksIconList | PagesBlocksTwoColumns | PagesBlocksInfoBox | PagesBlocksDocGrid | PagesBlocksBadge | PagesBlocksSeparator | PagesBlocksCenterNotice
+
 type Pages implements Node & Document {
   title: String!
   permalink: String
   showBadge: Boolean
   menuOrder: Float
   body: JSON
+  blocks: [PagesBlocks]
   id: ID!
   _sys: SystemInfo!
   _values: JSON!
@@ -135,12 +222,112 @@ input RichTextFilter {
   exists: Boolean
 }
 
+input PagesBlocksHeadingFilter {
+  level: StringFilter
+  headingText: StringFilter
+}
+
+input PagesBlocksParagraphFilter {
+  bodyText: StringFilter
+}
+
+input PagesBlocksHighlightBoxFilter {
+  highlightText: StringFilter
+}
+
+input PagesBlocksFeatureGridCardsFilter {
+  title: StringFilter
+  description: StringFilter
+  icon: StringFilter
+  href: StringFilter
+}
+
+input PagesBlocksFeatureGridFilter {
+  cards: PagesBlocksFeatureGridCardsFilter
+}
+
+input PagesBlocksEducationGridAreasFilter {
+  label: StringFilter
+  icon: StringFilter
+}
+
+input PagesBlocksEducationGridFilter {
+  areas: PagesBlocksEducationGridAreasFilter
+}
+
+input PagesBlocksIconListEntriesFilter {
+  entryText: StringFilter
+  icon: StringFilter
+}
+
+input PagesBlocksIconListFilter {
+  entries: PagesBlocksIconListEntriesFilter
+}
+
+input PagesBlocksTwoColumnsColumnsFilter {
+  title: StringFilter
+  bulletItems: StringFilter
+}
+
+input PagesBlocksTwoColumnsFilter {
+  columns: PagesBlocksTwoColumnsColumnsFilter
+}
+
+input PagesBlocksInfoBoxFilter {
+  title: StringFilter
+  icon: StringFilter
+  infoText: StringFilter
+  bulletItems: StringFilter
+}
+
+input PagesBlocksDocGridDocumentsFilter {
+  title: StringFilter
+  description: StringFilter
+  href: StringFilter
+  icon: StringFilter
+  badge: StringFilter
+}
+
+input PagesBlocksDocGridFilter {
+  documents: PagesBlocksDocGridDocumentsFilter
+}
+
+input PagesBlocksBadgeFilter {
+  badgeText: StringFilter
+}
+
+input PagesBlocksSeparatorFilter {
+  variant: StringFilter
+}
+
+input PagesBlocksCenterNoticeFilter {
+  icon: StringFilter
+  headline: StringFilter
+  subline: StringFilter
+}
+
+input PagesBlocksFilter {
+  heading: PagesBlocksHeadingFilter
+  paragraph: PagesBlocksParagraphFilter
+  highlightBox: PagesBlocksHighlightBoxFilter
+  featureGrid: PagesBlocksFeatureGridFilter
+  educationGrid: PagesBlocksEducationGridFilter
+  iconList: PagesBlocksIconListFilter
+  twoColumns: PagesBlocksTwoColumnsFilter
+  infoBox: PagesBlocksInfoBoxFilter
+  docGrid: PagesBlocksDocGridFilter
+  badge: PagesBlocksBadgeFilter
+  separator: PagesBlocksSeparatorFilter
+  centerNotice: PagesBlocksCenterNoticeFilter
+}
+
 input PagesFilter {
   title: StringFilter
   permalink: StringFilter
   showBadge: BooleanFilter
   menuOrder: NumberFilter
   body: RichTextFilter
+  blocks: PagesBlocksFilter
 }
 
 type PagesConnectionEdges {
@@ -282,12 +469,112 @@ input DocumentMutation {
   home: HomeMutation
 }
 
+input PagesBlocksHeadingMutation {
+  level: String
+  headingText: String
+}
+
+input PagesBlocksParagraphMutation {
+  bodyText: String
+}
+
+input PagesBlocksHighlightBoxMutation {
+  highlightText: String
+}
+
+input PagesBlocksFeatureGridCardsMutation {
+  title: String
+  description: String
+  icon: String
+  href: String
+}
+
+input PagesBlocksFeatureGridMutation {
+  cards: [PagesBlocksFeatureGridCardsMutation]
+}
+
+input PagesBlocksEducationGridAreasMutation {
+  label: String
+  icon: String
+}
+
+input PagesBlocksEducationGridMutation {
+  areas: [PagesBlocksEducationGridAreasMutation]
+}
+
+input PagesBlocksIconListEntriesMutation {
+  entryText: String
+  icon: String
+}
+
+input PagesBlocksIconListMutation {
+  entries: [PagesBlocksIconListEntriesMutation]
+}
+
+input PagesBlocksTwoColumnsColumnsMutation {
+  title: String
+  bulletItems: [String]
+}
+
+input PagesBlocksTwoColumnsMutation {
+  columns: [PagesBlocksTwoColumnsColumnsMutation]
+}
+
+input PagesBlocksInfoBoxMutation {
+  title: String
+  icon: String
+  infoText: String
+  bulletItems: [String]
+}
+
+input PagesBlocksDocGridDocumentsMutation {
+  title: String
+  description: String
+  href: String
+  icon: String
+  badge: String
+}
+
+input PagesBlocksDocGridMutation {
+  documents: [PagesBlocksDocGridDocumentsMutation]
+}
+
+input PagesBlocksBadgeMutation {
+  badgeText: String
+}
+
+input PagesBlocksSeparatorMutation {
+  variant: String
+}
+
+input PagesBlocksCenterNoticeMutation {
+  icon: String
+  headline: String
+  subline: String
+}
+
+input PagesBlocksMutation {
+  heading: PagesBlocksHeadingMutation
+  paragraph: PagesBlocksParagraphMutation
+  highlightBox: PagesBlocksHighlightBoxMutation
+  featureGrid: PagesBlocksFeatureGridMutation
+  educationGrid: PagesBlocksEducationGridMutation
+  iconList: PagesBlocksIconListMutation
+  twoColumns: PagesBlocksTwoColumnsMutation
+  infoBox: PagesBlocksInfoBoxMutation
+  docGrid: PagesBlocksDocGridMutation
+  badge: PagesBlocksBadgeMutation
+  separator: PagesBlocksSeparatorMutation
+  centerNotice: PagesBlocksCenterNoticeMutation
+}
+
 input PagesMutation {
   title: String
   permalink: String
   showBadge: Boolean
   menuOrder: Float
   body: JSON
+  blocks: [PagesBlocksMutation]
 }
 
 input EventsMutation {

@@ -1,5 +1,162 @@
 // tina/config.ts
 import { defineConfig } from "tinacms";
+
+// tina/components/IconPicker.tsx
+import React from "react";
+import { wrapFieldsWithMeta } from "tinacms";
+
+// src/lib/iconOptions.ts
+var ICON_OPTIONS = [
+  {
+    value: "book-open",
+    label: "Buch",
+    path: "M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"
+  },
+  {
+    value: "users",
+    label: "Menschen",
+    path: "M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"
+  },
+  {
+    value: "document",
+    label: "Dokument",
+    path: "M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+  },
+  {
+    value: "briefcase",
+    label: "Stellen",
+    path: "M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 0 0 .75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 0 0-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0 1 12 15.75a23.978 23.978 0 0 1-6.577-.898 2.18 2.18 0 0 1-.673-.38m0 0A2.18 2.18 0 0 1 3.75 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 0 1 3.413-.387m7.5 0V5.25A2.25 2.25 0 0 0 14.25 3h-4.5A2.25 2.25 0 0 0 7.5 5.25v.894m7.5 0a48.667 48.667 0 0 0-7.5 0M12 12.75h.008v.008H12v-.008Z"
+  },
+  {
+    value: "info",
+    label: "Info",
+    path: "M11.25 11.25l.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"
+  },
+  {
+    value: "globe",
+    label: "Natur",
+    path: "M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5a17.92 17.92 0 0 1-8.716-4.247m0 0A8.959 8.959 0 0 1 3 12c0-1.89.582-3.644 1.578-5.095"
+  },
+  {
+    value: "kitchen",
+    label: "Kueche",
+    path: "M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.871c1.355 0 2.697.056 4.024.166C17.155 8.51 18 9.473 18 10.608v2.513M15 8.25v-1.5m-6 1.5v-1.5m12 9.75-1.5.75a3.354 3.354 0 0 1-3 0 3.354 3.354 0 0 0-3 0 3.354 3.354 0 0 1-3 0 3.354 3.354 0 0 0-3 0 3.354 3.354 0 0 1-3 0L3 16.5m18-4.5a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+  },
+  {
+    value: "sparkles",
+    label: "Stern",
+    path: "M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"
+  },
+  {
+    value: "currency",
+    label: "Essensgeld",
+    path: "M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"
+  },
+  {
+    value: "heart",
+    label: "Herz",
+    path: "M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
+  },
+  {
+    value: "calendar",
+    label: "Kalender",
+    path: "M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
+  },
+  {
+    value: "phone",
+    label: "Telefon",
+    path: "M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"
+  },
+  {
+    value: "mail",
+    label: "E-Mail",
+    path: "M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
+  },
+  {
+    value: "building",
+    label: "Gebaeude",
+    path: "M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z"
+  },
+  {
+    value: "shield",
+    label: "Sicherheit",
+    path: "M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"
+  },
+  {
+    value: "paint",
+    label: "Kreativ",
+    path: "M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128Zm0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42"
+  },
+  {
+    value: "music",
+    label: "Musik",
+    path: "m9 9 10.5-3m0 6.553v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 1 1-.99-3.467l2.31-.66a2.25 2.25 0 0 0 1.632-2.163Zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 0 1-.99-3.467l2.31-.66A2.25 2.25 0 0 0 9 15.553Z"
+  },
+  {
+    value: "lightbulb",
+    label: "Lernen",
+    path: "M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.383a14.406 14.406 0 0 1-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 1 0-7.517 0c.85.493 1.509 1.333 1.509 2.316V18"
+  },
+  {
+    value: "wrench",
+    label: "Arbeit",
+    path: "M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008Z"
+  },
+  {
+    value: "clock",
+    label: "Uhr",
+    path: "M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+  },
+  {
+    value: "calculator",
+    label: "Rechner",
+    path: "M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V13.5Zm0 2.25h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V18Zm2.498-6.75h.007v.008h-.007v-.008Zm0 2.25h.007v.008h-.007V13.5Zm0 2.25h.007v.008h-.007v-.008Zm0 2.25h.007v.008h-.007V18Zm2.504-6.75h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V13.5Zm0 2.25h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V18Zm2.498-6.75h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V13.5ZM8.25 6h7.5v2.25h-7.5V6ZM12 2.25c-1.892 0-3.758.11-5.593.322C5.307 2.7 4.5 3.65 4.5 4.757V19.5a2.25 2.25 0 0 0 2.25 2.25h10.5a2.25 2.25 0 0 0 2.25-2.25V4.757c0-1.108-.806-2.057-1.907-2.185A48.507 48.507 0 0 0 12 2.25Z"
+  }
+];
+var iconPathByValue = Object.fromEntries(ICON_OPTIONS.map((option) => [option.value, option.path]));
+
+// tina/components/IconPicker.tsx
+var IconPicker = wrapFieldsWithMeta((props) => {
+  const value = props.input?.value;
+  return React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(86px, 1fr))", gap: "0.5rem" } }, ICON_OPTIONS.map((option) => {
+    const active = value === option.value;
+    return React.createElement(
+      "button",
+      {
+        key: option.value,
+        type: "button",
+        onClick: () => props.input?.onChange(option.value),
+        title: option.label,
+        style: {
+          border: active ? "2px solid #5d9847" : "1px solid #d7dee9",
+          borderRadius: "10px",
+          padding: "0.5rem",
+          background: active ? "#f5fbe9" : "#ffffff",
+          cursor: "pointer",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "0.35rem"
+        }
+      },
+      React.createElement(
+        "svg",
+        {
+          xmlns: "http://www.w3.org/2000/svg",
+          fill: "none",
+          viewBox: "0 0 24 24",
+          strokeWidth: "1.5",
+          stroke: "currentColor",
+          style: { width: "22px", height: "22px", color: "#4a7a3a" }
+        },
+        React.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", d: option.path })
+      ),
+      React.createElement("span", { style: { fontSize: "11px", lineHeight: 1.15, textAlign: "center", color: "#334155" } }, option.label)
+    );
+  }));
+});
+
+// tina/config.ts
 var branch = process.env.TINA_BRANCH || process.env.VERCEL_GIT_COMMIT_REF || "main";
 var config_default = defineConfig({
   branch,
@@ -27,7 +184,226 @@ var config_default = defineConfig({
           { type: "string", name: "permalink", label: "Link" },
           { type: "boolean", name: "showBadge", label: "Badge anzeigen" },
           { type: "number", name: "menuOrder", label: "Men\xFC-Reihenfolge" },
-          { type: "rich-text", name: "body", label: "Inhalt", isBody: true }
+          {
+            type: "rich-text",
+            name: "body",
+            label: "Seiteninhalt (einfacher Editor)",
+            isBody: true
+          },
+          {
+            type: "object",
+            name: "blocks",
+            label: "Inhaltsbloecke (erweitert)",
+            list: true,
+            templates: [
+              {
+                name: "heading",
+                label: "Ueberschrift",
+                fields: [
+                  {
+                    type: "string",
+                    name: "level",
+                    label: "Ebene",
+                    options: [
+                      { label: "H2", value: "h2" },
+                      { label: "H3", value: "h3" }
+                    ]
+                  },
+                  { type: "string", name: "headingText", label: "Text", required: true }
+                ]
+              },
+              {
+                name: "paragraph",
+                label: "Absatz",
+                fields: [
+                  { type: "string", name: "bodyText", label: "Text", required: true, ui: { component: "textarea" } }
+                ]
+              },
+              {
+                name: "highlightBox",
+                label: "Highlight Box",
+                fields: [
+                  { type: "string", name: "highlightText", label: "Text", required: true, ui: { component: "textarea" } }
+                ]
+              },
+              {
+                name: "featureGrid",
+                label: "Feature Karten",
+                fields: [
+                  {
+                    type: "object",
+                    name: "cards",
+                    label: "Karten",
+                    list: true,
+                    ui: {
+                      itemProps: (item) => ({ label: item?.title || "Karte" })
+                    },
+                    fields: [
+                      { type: "string", name: "title", label: "Titel", required: true },
+                      { type: "string", name: "description", label: "Beschreibung", required: true, ui: { component: "textarea" } },
+                      {
+                        type: "string",
+                        name: "icon",
+                        label: "Icon",
+                        required: true,
+                        options: ICON_OPTIONS.map((option) => ({ label: option.label, value: option.value })),
+                        ui: { component: IconPicker }
+                      },
+                      { type: "string", name: "href", label: "Link (optional)" }
+                    ]
+                  }
+                ]
+              },
+              {
+                name: "educationGrid",
+                label: "Bildungsbereiche",
+                fields: [
+                  {
+                    type: "object",
+                    name: "areas",
+                    label: "Bereiche",
+                    list: true,
+                    ui: {
+                      itemProps: (item) => ({ label: item?.label || "Bereich" })
+                    },
+                    fields: [
+                      { type: "string", name: "label", label: "Bezeichnung", required: true },
+                      {
+                        type: "string",
+                        name: "icon",
+                        label: "Icon",
+                        required: true,
+                        options: ICON_OPTIONS.map((option) => ({ label: option.label, value: option.value })),
+                        ui: { component: IconPicker }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                name: "iconList",
+                label: "Icon Liste",
+                fields: [
+                  {
+                    type: "object",
+                    name: "entries",
+                    label: "Eintraege",
+                    list: true,
+                    ui: {
+                      itemProps: (item) => ({ label: item?.entryText || "Eintrag" })
+                    },
+                    fields: [
+                      { type: "string", name: "entryText", label: "Text", required: true },
+                      {
+                        type: "string",
+                        name: "icon",
+                        label: "Icon",
+                        required: true,
+                        options: ICON_OPTIONS.map((option) => ({ label: option.label, value: option.value })),
+                        ui: { component: IconPicker }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                name: "twoColumns",
+                label: "Zwei Spalten",
+                fields: [
+                  {
+                    type: "object",
+                    name: "columns",
+                    label: "Spalten",
+                    list: true,
+                    fields: [
+                      { type: "string", name: "title", label: "Titel", required: true },
+                      { type: "string", name: "bulletItems", label: "Listenpunkte", list: true }
+                    ]
+                  }
+                ]
+              },
+              {
+                name: "infoBox",
+                label: "Info Box",
+                fields: [
+                  { type: "string", name: "title", label: "Titel", required: true },
+                  {
+                    type: "string",
+                    name: "icon",
+                    label: "Icon",
+                    required: true,
+                    options: ICON_OPTIONS.map((option) => ({ label: option.label, value: option.value })),
+                    ui: { component: IconPicker }
+                  },
+                  { type: "string", name: "infoText", label: "Text", ui: { component: "textarea" } },
+                  { type: "string", name: "bulletItems", label: "Listenpunkte", list: true }
+                ]
+              },
+              {
+                name: "docGrid",
+                label: "Dokumente Grid",
+                fields: [
+                  {
+                    type: "object",
+                    name: "documents",
+                    label: "Dokumente",
+                    list: true,
+                    ui: {
+                      itemProps: (item) => ({ label: item?.title || "Dokument" })
+                    },
+                    fields: [
+                      { type: "string", name: "title", label: "Titel", required: true },
+                      { type: "string", name: "description", label: "Beschreibung", ui: { component: "textarea" } },
+                      { type: "string", name: "href", label: "Datei-Link", required: true },
+                      {
+                        type: "string",
+                        name: "icon",
+                        label: "Icon",
+                        required: true,
+                        options: ICON_OPTIONS.map((option) => ({ label: option.label, value: option.value })),
+                        ui: { component: IconPicker }
+                      },
+                      { type: "string", name: "badge", label: "Badge", options: ["PDF", "LINK"] }
+                    ]
+                  }
+                ]
+              },
+              {
+                name: "badge",
+                label: "Gruenes Badge",
+                fields: [{ type: "string", name: "badgeText", label: "Text", required: true }]
+              },
+              {
+                name: "separator",
+                label: "Trennlinie",
+                fields: [
+                  {
+                    type: "string",
+                    name: "variant",
+                    label: "Variante",
+                    options: [{ label: "Linie", value: "line" }],
+                    required: true
+                  }
+                ]
+              },
+              {
+                name: "centerNotice",
+                label: "Zentrierter Hinweis",
+                fields: [
+                  {
+                    type: "string",
+                    name: "icon",
+                    label: "Icon",
+                    required: true,
+                    options: ICON_OPTIONS.map((option) => ({ label: option.label, value: option.value })),
+                    ui: { component: IconPicker }
+                  },
+                  { type: "string", name: "headline", label: "Haupttext", required: true },
+                  { type: "string", name: "subline", label: "Untertext", ui: { component: "textarea" } }
+                ]
+              }
+            ]
+          }
         ]
       },
       {

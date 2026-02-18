@@ -1,5 +1,0 @@
----
-label: "Elternkennenlerncafé"
-type: event
-start: 2026-09-09
----

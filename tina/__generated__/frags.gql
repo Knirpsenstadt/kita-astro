@@ -5,6 +5,76 @@ fragment PagesParts on Pages {
   showBadge
   menuOrder
   body
+  blocks {
+    __typename
+    ... on PagesBlocksHeading {
+      level
+      headingText
+    }
+    ... on PagesBlocksParagraph {
+      bodyText
+    }
+    ... on PagesBlocksHighlightBox {
+      highlightText
+    }
+    ... on PagesBlocksFeatureGrid {
+      cards {
+        __typename
+        title
+        description
+        icon
+        href
+      }
+    }
+    ... on PagesBlocksEducationGrid {
+      areas {
+        __typename
+        label
+        icon
+      }
+    }
+    ... on PagesBlocksIconList {
+      entries {
+        __typename
+        entryText
+        icon
+      }
+    }
+    ... on PagesBlocksTwoColumns {
+      columns {
+        __typename
+        title
+        bulletItems
+      }
+    }
+    ... on PagesBlocksInfoBox {
+      title
+      icon
+      infoText
+      bulletItems
+    }
+    ... on PagesBlocksDocGrid {
+      documents {
+        __typename
+        title
+        description
+        href
+        icon
+        badge
+      }
+    }
+    ... on PagesBlocksBadge {
+      badgeText
+    }
+    ... on PagesBlocksSeparator {
+      variant
+    }
+    ... on PagesBlocksCenterNotice {
+      icon
+      headline
+      subline
+    }
+  }
 }
 
 fragment EventsParts on Events {

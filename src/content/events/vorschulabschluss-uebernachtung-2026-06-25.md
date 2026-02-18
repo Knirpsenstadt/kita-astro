@@ -1,6 +1,0 @@
----
-label: "Vorschulabschluss & Übernachtung"
-type: festivity
-start: 2026-06-25
-end: 2026-06-26
----

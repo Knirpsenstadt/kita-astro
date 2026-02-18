@@ -219,6 +219,109 @@ export type CollectionDocumentsArgs = {
 
 export type DocumentNode = Pages | Events | Sponsors | Home | Folder;
 
+export type PagesBlocksHeading = {
+  __typename?: 'PagesBlocksHeading';
+  level?: Maybe<Scalars['String']['output']>;
+  headingText: Scalars['String']['output'];
+};
+
+export type PagesBlocksParagraph = {
+  __typename?: 'PagesBlocksParagraph';
+  bodyText: Scalars['String']['output'];
+};
+
+export type PagesBlocksHighlightBox = {
+  __typename?: 'PagesBlocksHighlightBox';
+  highlightText: Scalars['String']['output'];
+};
+
+export type PagesBlocksFeatureGridCards = {
+  __typename?: 'PagesBlocksFeatureGridCards';
+  title: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  icon: Scalars['String']['output'];
+  href?: Maybe<Scalars['String']['output']>;
+};
+
+export type PagesBlocksFeatureGrid = {
+  __typename?: 'PagesBlocksFeatureGrid';
+  cards?: Maybe<Array<Maybe<PagesBlocksFeatureGridCards>>>;
+};
+
+export type PagesBlocksEducationGridAreas = {
+  __typename?: 'PagesBlocksEducationGridAreas';
+  label: Scalars['String']['output'];
+  icon: Scalars['String']['output'];
+};
+
+export type PagesBlocksEducationGrid = {
+  __typename?: 'PagesBlocksEducationGrid';
+  areas?: Maybe<Array<Maybe<PagesBlocksEducationGridAreas>>>;
+};
+
+export type PagesBlocksIconListEntries = {
+  __typename?: 'PagesBlocksIconListEntries';
+  entryText: Scalars['String']['output'];
+  icon: Scalars['String']['output'];
+};
+
+export type PagesBlocksIconList = {
+  __typename?: 'PagesBlocksIconList';
+  entries?: Maybe<Array<Maybe<PagesBlocksIconListEntries>>>;
+};
+
+export type PagesBlocksTwoColumnsColumns = {
+  __typename?: 'PagesBlocksTwoColumnsColumns';
+  title: Scalars['String']['output'];
+  bulletItems?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
+};
+
+export type PagesBlocksTwoColumns = {
+  __typename?: 'PagesBlocksTwoColumns';
+  columns?: Maybe<Array<Maybe<PagesBlocksTwoColumnsColumns>>>;
+};
+
+export type PagesBlocksInfoBox = {
+  __typename?: 'PagesBlocksInfoBox';
+  title: Scalars['String']['output'];
+  icon: Scalars['String']['output'];
+  infoText?: Maybe<Scalars['String']['output']>;
+  bulletItems?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
+};
+
+export type PagesBlocksDocGridDocuments = {
+  __typename?: 'PagesBlocksDocGridDocuments';
+  title: Scalars['String']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  href: Scalars['String']['output'];
+  icon: Scalars['String']['output'];
+  badge?: Maybe<Scalars['String']['output']>;
+};
+
+export type PagesBlocksDocGrid = {
+  __typename?: 'PagesBlocksDocGrid';
+  documents?: Maybe<Array<Maybe<PagesBlocksDocGridDocuments>>>;
+};
+
+export type PagesBlocksBadge = {
+  __typename?: 'PagesBlocksBadge';
+  badgeText: Scalars['String']['output'];
+};
+
+export type PagesBlocksSeparator = {
+  __typename?: 'PagesBlocksSeparator';
+  variant: Scalars['String']['output'];
+};
+
+export type PagesBlocksCenterNotice = {
+  __typename?: 'PagesBlocksCenterNotice';
+  icon: Scalars['String']['output'];
+  headline: Scalars['String']['output'];
+  subline?: Maybe<Scalars['String']['output']>;
+};
+
+export type PagesBlocks = PagesBlocksHeading | PagesBlocksParagraph | PagesBlocksHighlightBox | PagesBlocksFeatureGrid | PagesBlocksEducationGrid | PagesBlocksIconList | PagesBlocksTwoColumns | PagesBlocksInfoBox | PagesBlocksDocGrid | PagesBlocksBadge | PagesBlocksSeparator | PagesBlocksCenterNotice;
+
 export type Pages = Node & Document & {
   __typename?: 'Pages';
   title: Scalars['String']['output'];
@@ -226,6 +329,7 @@ export type Pages = Node & Document & {
   showBadge?: Maybe<Scalars['Boolean']['output']>;
   menuOrder?: Maybe<Scalars['Float']['output']>;
   body?: Maybe<Scalars['JSON']['output']>;
+  blocks?: Maybe<Array<Maybe<PagesBlocks>>>;
   id: Scalars['ID']['output'];
   _sys: SystemInfo;
   _values: Scalars['JSON']['output'];
@@ -259,12 +363,112 @@ export type RichTextFilter = {
   exists?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+export type PagesBlocksHeadingFilter = {
+  level?: InputMaybe<StringFilter>;
+  headingText?: InputMaybe<StringFilter>;
+};
+
+export type PagesBlocksParagraphFilter = {
+  bodyText?: InputMaybe<StringFilter>;
+};
+
+export type PagesBlocksHighlightBoxFilter = {
+  highlightText?: InputMaybe<StringFilter>;
+};
+
+export type PagesBlocksFeatureGridCardsFilter = {
+  title?: InputMaybe<StringFilter>;
+  description?: InputMaybe<StringFilter>;
+  icon?: InputMaybe<StringFilter>;
+  href?: InputMaybe<StringFilter>;
+};
+
+export type PagesBlocksFeatureGridFilter = {
+  cards?: InputMaybe<PagesBlocksFeatureGridCardsFilter>;
+};
+
+export type PagesBlocksEducationGridAreasFilter = {
+  label?: InputMaybe<StringFilter>;
+  icon?: InputMaybe<StringFilter>;
+};
+
+export type PagesBlocksEducationGridFilter = {
+  areas?: InputMaybe<PagesBlocksEducationGridAreasFilter>;
+};
+
+export type PagesBlocksIconListEntriesFilter = {
+  entryText?: InputMaybe<StringFilter>;
+  icon?: InputMaybe<StringFilter>;
+};
+
+export type PagesBlocksIconListFilter = {
+  entries?: InputMaybe<PagesBlocksIconListEntriesFilter>;
+};
+
+export type PagesBlocksTwoColumnsColumnsFilter = {
+  title?: InputMaybe<StringFilter>;
+  bulletItems?: InputMaybe<StringFilter>;
+};
+
+export type PagesBlocksTwoColumnsFilter = {
+  columns?: InputMaybe<PagesBlocksTwoColumnsColumnsFilter>;
+};
+
+export type PagesBlocksInfoBoxFilter = {
+  title?: InputMaybe<StringFilter>;
+  icon?: InputMaybe<StringFilter>;
+  infoText?: InputMaybe<StringFilter>;
+  bulletItems?: InputMaybe<StringFilter>;
+};
+
+export type PagesBlocksDocGridDocumentsFilter = {
+  title?: InputMaybe<StringFilter>;
+  description?: InputMaybe<StringFilter>;
+  href?: InputMaybe<StringFilter>;
+  icon?: InputMaybe<StringFilter>;
+  badge?: InputMaybe<StringFilter>;
+};
+
+export type PagesBlocksDocGridFilter = {
+  documents?: InputMaybe<PagesBlocksDocGridDocumentsFilter>;
+};
+
+export type PagesBlocksBadgeFilter = {
+  badgeText?: InputMaybe<StringFilter>;
+};
+
+export type PagesBlocksSeparatorFilter = {
+  variant?: InputMaybe<StringFilter>;
+};
+
+export type PagesBlocksCenterNoticeFilter = {
+  icon?: InputMaybe<StringFilter>;
+  headline?: InputMaybe<StringFilter>;
+  subline?: InputMaybe<StringFilter>;
+};
+
+export type PagesBlocksFilter = {
+  heading?: InputMaybe<PagesBlocksHeadingFilter>;
+  paragraph?: InputMaybe<PagesBlocksParagraphFilter>;
+  highlightBox?: InputMaybe<PagesBlocksHighlightBoxFilter>;
+  featureGrid?: InputMaybe<PagesBlocksFeatureGridFilter>;
+  educationGrid?: InputMaybe<PagesBlocksEducationGridFilter>;
+  iconList?: InputMaybe<PagesBlocksIconListFilter>;
+  twoColumns?: InputMaybe<PagesBlocksTwoColumnsFilter>;
+  infoBox?: InputMaybe<PagesBlocksInfoBoxFilter>;
+  docGrid?: InputMaybe<PagesBlocksDocGridFilter>;
+  badge?: InputMaybe<PagesBlocksBadgeFilter>;
+  separator?: InputMaybe<PagesBlocksSeparatorFilter>;
+  centerNotice?: InputMaybe<PagesBlocksCenterNoticeFilter>;
+};
+
 export type PagesFilter = {
   title?: InputMaybe<StringFilter>;
   permalink?: InputMaybe<StringFilter>;
   showBadge?: InputMaybe<BooleanFilter>;
   menuOrder?: InputMaybe<NumberFilter>;
   body?: InputMaybe<RichTextFilter>;
+  blocks?: InputMaybe<PagesBlocksFilter>;
 };
 
 export type PagesConnectionEdges = {
@@ -499,12 +703,112 @@ export type DocumentMutation = {
   home?: InputMaybe<HomeMutation>;
 };
 
+export type PagesBlocksHeadingMutation = {
+  level?: InputMaybe<Scalars['String']['input']>;
+  headingText?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PagesBlocksParagraphMutation = {
+  bodyText?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PagesBlocksHighlightBoxMutation = {
+  highlightText?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PagesBlocksFeatureGridCardsMutation = {
+  title?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  icon?: InputMaybe<Scalars['String']['input']>;
+  href?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PagesBlocksFeatureGridMutation = {
+  cards?: InputMaybe<Array<InputMaybe<PagesBlocksFeatureGridCardsMutation>>>;
+};
+
+export type PagesBlocksEducationGridAreasMutation = {
+  label?: InputMaybe<Scalars['String']['input']>;
+  icon?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PagesBlocksEducationGridMutation = {
+  areas?: InputMaybe<Array<InputMaybe<PagesBlocksEducationGridAreasMutation>>>;
+};
+
+export type PagesBlocksIconListEntriesMutation = {
+  entryText?: InputMaybe<Scalars['String']['input']>;
+  icon?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PagesBlocksIconListMutation = {
+  entries?: InputMaybe<Array<InputMaybe<PagesBlocksIconListEntriesMutation>>>;
+};
+
+export type PagesBlocksTwoColumnsColumnsMutation = {
+  title?: InputMaybe<Scalars['String']['input']>;
+  bulletItems?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+};
+
+export type PagesBlocksTwoColumnsMutation = {
+  columns?: InputMaybe<Array<InputMaybe<PagesBlocksTwoColumnsColumnsMutation>>>;
+};
+
+export type PagesBlocksInfoBoxMutation = {
+  title?: InputMaybe<Scalars['String']['input']>;
+  icon?: InputMaybe<Scalars['String']['input']>;
+  infoText?: InputMaybe<Scalars['String']['input']>;
+  bulletItems?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+};
+
+export type PagesBlocksDocGridDocumentsMutation = {
+  title?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  href?: InputMaybe<Scalars['String']['input']>;
+  icon?: InputMaybe<Scalars['String']['input']>;
+  badge?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PagesBlocksDocGridMutation = {
+  documents?: InputMaybe<Array<InputMaybe<PagesBlocksDocGridDocumentsMutation>>>;
+};
+
+export type PagesBlocksBadgeMutation = {
+  badgeText?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PagesBlocksSeparatorMutation = {
+  variant?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PagesBlocksCenterNoticeMutation = {
+  icon?: InputMaybe<Scalars['String']['input']>;
+  headline?: InputMaybe<Scalars['String']['input']>;
+  subline?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PagesBlocksMutation = {
+  heading?: InputMaybe<PagesBlocksHeadingMutation>;
+  paragraph?: InputMaybe<PagesBlocksParagraphMutation>;
+  highlightBox?: InputMaybe<PagesBlocksHighlightBoxMutation>;
+  featureGrid?: InputMaybe<PagesBlocksFeatureGridMutation>;
+  educationGrid?: InputMaybe<PagesBlocksEducationGridMutation>;
+  iconList?: InputMaybe<PagesBlocksIconListMutation>;
+  twoColumns?: InputMaybe<PagesBlocksTwoColumnsMutation>;
+  infoBox?: InputMaybe<PagesBlocksInfoBoxMutation>;
+  docGrid?: InputMaybe<PagesBlocksDocGridMutation>;
+  badge?: InputMaybe<PagesBlocksBadgeMutation>;
+  separator?: InputMaybe<PagesBlocksSeparatorMutation>;
+  centerNotice?: InputMaybe<PagesBlocksCenterNoticeMutation>;
+};
+
 export type PagesMutation = {
   title?: InputMaybe<Scalars['String']['input']>;
   permalink?: InputMaybe<Scalars['String']['input']>;
   showBadge?: InputMaybe<Scalars['Boolean']['input']>;
   menuOrder?: InputMaybe<Scalars['Float']['input']>;
   body?: InputMaybe<Scalars['JSON']['input']>;
+  blocks?: InputMaybe<Array<InputMaybe<PagesBlocksMutation>>>;
 };
 
 export type EventsMutation = {
@@ -527,7 +831,7 @@ export type HomeMutation = {
   body?: InputMaybe<Scalars['JSON']['input']>;
 };
 
-export type PagesPartsFragment = { __typename: 'Pages', title: string, permalink?: string | null, showBadge?: boolean | null, menuOrder?: number | null, body?: any | null };
+export type PagesPartsFragment = { __typename: 'Pages', title: string, permalink?: string | null, showBadge?: boolean | null, menuOrder?: number | null, body?: any | null, blocks?: Array<{ __typename: 'PagesBlocksHeading', level?: string | null, headingText: string } | { __typename: 'PagesBlocksParagraph', bodyText: string } | { __typename: 'PagesBlocksHighlightBox', highlightText: string } | { __typename: 'PagesBlocksFeatureGrid', cards?: Array<{ __typename: 'PagesBlocksFeatureGridCards', title: string, description: string, icon: string, href?: string | null } | null> | null } | { __typename: 'PagesBlocksEducationGrid', areas?: Array<{ __typename: 'PagesBlocksEducationGridAreas', label: string, icon: string } | null> | null } | { __typename: 'PagesBlocksIconList', entries?: Array<{ __typename: 'PagesBlocksIconListEntries', entryText: string, icon: string } | null> | null } | { __typename: 'PagesBlocksTwoColumns', columns?: Array<{ __typename: 'PagesBlocksTwoColumnsColumns', title: string, bulletItems?: Array<string | null> | null } | null> | null } | { __typename: 'PagesBlocksInfoBox', title: string, icon: string, infoText?: string | null, bulletItems?: Array<string | null> | null } | { __typename: 'PagesBlocksDocGrid', documents?: Array<{ __typename: 'PagesBlocksDocGridDocuments', title: string, description?: string | null, href: string, icon: string, badge?: string | null } | null> | null } | { __typename: 'PagesBlocksBadge', badgeText: string } | { __typename: 'PagesBlocksSeparator', variant: string } | { __typename: 'PagesBlocksCenterNotice', icon: string, headline: string, subline?: string | null } | null> | null };
 
 export type EventsPartsFragment = { __typename: 'Events', label: string, type?: string | null, start: string, end?: string | null };
 
@@ -540,7 +844,7 @@ export type PagesQueryVariables = Exact<{
 }>;
 
 
-export type PagesQuery = { __typename?: 'Query', pages: { __typename: 'Pages', id: string, title: string, permalink?: string | null, showBadge?: boolean | null, menuOrder?: number | null, body?: any | null, _sys: { __typename?: 'SystemInfo', filename: string, basename: string, hasReferences?: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string } } };
+export type PagesQuery = { __typename?: 'Query', pages: { __typename: 'Pages', id: string, title: string, permalink?: string | null, showBadge?: boolean | null, menuOrder?: number | null, body?: any | null, _sys: { __typename?: 'SystemInfo', filename: string, basename: string, hasReferences?: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string }, blocks?: Array<{ __typename: 'PagesBlocksHeading', level?: string | null, headingText: string } | { __typename: 'PagesBlocksParagraph', bodyText: string } | { __typename: 'PagesBlocksHighlightBox', highlightText: string } | { __typename: 'PagesBlocksFeatureGrid', cards?: Array<{ __typename: 'PagesBlocksFeatureGridCards', title: string, description: string, icon: string, href?: string | null } | null> | null } | { __typename: 'PagesBlocksEducationGrid', areas?: Array<{ __typename: 'PagesBlocksEducationGridAreas', label: string, icon: string } | null> | null } | { __typename: 'PagesBlocksIconList', entries?: Array<{ __typename: 'PagesBlocksIconListEntries', entryText: string, icon: string } | null> | null } | { __typename: 'PagesBlocksTwoColumns', columns?: Array<{ __typename: 'PagesBlocksTwoColumnsColumns', title: string, bulletItems?: Array<string | null> | null } | null> | null } | { __typename: 'PagesBlocksInfoBox', title: string, icon: string, infoText?: string | null, bulletItems?: Array<string | null> | null } | { __typename: 'PagesBlocksDocGrid', documents?: Array<{ __typename: 'PagesBlocksDocGridDocuments', title: string, description?: string | null, href: string, icon: string, badge?: string | null } | null> | null } | { __typename: 'PagesBlocksBadge', badgeText: string } | { __typename: 'PagesBlocksSeparator', variant: string } | { __typename: 'PagesBlocksCenterNotice', icon: string, headline: string, subline?: string | null } | null> | null } };
 
 export type PagesConnectionQueryVariables = Exact<{
   before?: InputMaybe<Scalars['String']['input']>;
@@ -552,7 +856,7 @@ export type PagesConnectionQueryVariables = Exact<{
 }>;
 
 
-export type PagesConnectionQuery = { __typename?: 'Query', pagesConnection: { __typename?: 'PagesConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasPreviousPage: boolean, hasNextPage: boolean, startCursor: string, endCursor: string }, edges?: Array<{ __typename?: 'PagesConnectionEdges', cursor: string, node?: { __typename: 'Pages', id: string, title: string, permalink?: string | null, showBadge?: boolean | null, menuOrder?: number | null, body?: any | null, _sys: { __typename?: 'SystemInfo', filename: string, basename: string, hasReferences?: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string } } | null } | null> | null } };
+export type PagesConnectionQuery = { __typename?: 'Query', pagesConnection: { __typename?: 'PagesConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasPreviousPage: boolean, hasNextPage: boolean, startCursor: string, endCursor: string }, edges?: Array<{ __typename?: 'PagesConnectionEdges', cursor: string, node?: { __typename: 'Pages', id: string, title: string, permalink?: string | null, showBadge?: boolean | null, menuOrder?: number | null, body?: any | null, _sys: { __typename?: 'SystemInfo', filename: string, basename: string, hasReferences?: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string }, blocks?: Array<{ __typename: 'PagesBlocksHeading', level?: string | null, headingText: string } | { __typename: 'PagesBlocksParagraph', bodyText: string } | { __typename: 'PagesBlocksHighlightBox', highlightText: string } | { __typename: 'PagesBlocksFeatureGrid', cards?: Array<{ __typename: 'PagesBlocksFeatureGridCards', title: string, description: string, icon: string, href?: string | null } | null> | null } | { __typename: 'PagesBlocksEducationGrid', areas?: Array<{ __typename: 'PagesBlocksEducationGridAreas', label: string, icon: string } | null> | null } | { __typename: 'PagesBlocksIconList', entries?: Array<{ __typename: 'PagesBlocksIconListEntries', entryText: string, icon: string } | null> | null } | { __typename: 'PagesBlocksTwoColumns', columns?: Array<{ __typename: 'PagesBlocksTwoColumnsColumns', title: string, bulletItems?: Array<string | null> | null } | null> | null } | { __typename: 'PagesBlocksInfoBox', title: string, icon: string, infoText?: string | null, bulletItems?: Array<string | null> | null } | { __typename: 'PagesBlocksDocGrid', documents?: Array<{ __typename: 'PagesBlocksDocGridDocuments', title: string, description?: string | null, href: string, icon: string, badge?: string | null } | null> | null } | { __typename: 'PagesBlocksBadge', badgeText: string } | { __typename: 'PagesBlocksSeparator', variant: string } | { __typename: 'PagesBlocksCenterNotice', icon: string, headline: string, subline?: string | null } | null> | null } | null } | null> | null } };
 
 export type EventsQueryVariables = Exact<{
   relativePath: Scalars['String']['input'];
@@ -619,6 +923,76 @@ export const PagesPartsFragmentDoc = gql`
   showBadge
   menuOrder
   body
+  blocks {
+    __typename
+    ... on PagesBlocksHeading {
+      level
+      headingText
+    }
+    ... on PagesBlocksParagraph {
+      bodyText
+    }
+    ... on PagesBlocksHighlightBox {
+      highlightText
+    }
+    ... on PagesBlocksFeatureGrid {
+      cards {
+        __typename
+        title
+        description
+        icon
+        href
+      }
+    }
+    ... on PagesBlocksEducationGrid {
+      areas {
+        __typename
+        label
+        icon
+      }
+    }
+    ... on PagesBlocksIconList {
+      entries {
+        __typename
+        entryText
+        icon
+      }
+    }
+    ... on PagesBlocksTwoColumns {
+      columns {
+        __typename
+        title
+        bulletItems
+      }
+    }
+    ... on PagesBlocksInfoBox {
+      title
+      icon
+      infoText
+      bulletItems
+    }
+    ... on PagesBlocksDocGrid {
+      documents {
+        __typename
+        title
+        description
+        href
+        icon
+        badge
+      }
+    }
+    ... on PagesBlocksBadge {
+      badgeText
+    }
+    ... on PagesBlocksSeparator {
+      variant
+    }
+    ... on PagesBlocksCenterNotice {
+      icon
+      headline
+      subline
+    }
+  }
 }
     `;
 export const EventsPartsFragmentDoc = gql`
