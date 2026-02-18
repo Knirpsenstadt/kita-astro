@@ -6,79 +6,95 @@ const sponsors = await getCollection('sponsors');
 ---
 
 <BaseLayout title="Sponsoren/Großspender">
-  <h1 class="text-2xl font-bold mb-6">Sponsoren/Großspender</h1>
-  
-  <p class="mb-6">
-    Wir danken unseren Sponsoren und Großspendern für ihre großzügige Unterstützung! 
-    Durch ihr Engagement können wir unsere Kita und die Angebote für unsere Kinder stetig verbessern.
-  </p>
-  
-  <div class="sponsors-container">
-    {sponsors.length > 0 ? (
-      sponsors.map(sponsor => (
-        <div class="sponsor-card">
-          {sponsor.data.logo && (
-            <div class="sponsor-logo">
-              <img src={sponsor.data.logo} alt={`${sponsor.data.name} Logo`} />
-            </div>
-          )}
-          <div class="sponsor-content">
-            <h3 class="sponsor-name">
-              {sponsor.data.website ? (
-                <a href={sponsor.data.website} target="_blank" rel="noopener noreferrer">
-                  {sponsor.data.name}
-                </a>
-              ) : (
-                sponsor.data.name
-              )}
-            </h3>
-            {sponsor.data.description && (
-              <p class="sponsor-description">{sponsor.data.description}</p>
-            )}
-            {sponsor.data.support && (
-              <div class="sponsor-support">
-                <strong>Unterstützung:</strong> {sponsor.data.support}
+  <article class="prose max-w-none bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
+    <div class="page-title-row">
+      <div class="page-title-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/></svg>
+      </div>
+      <h1 class="text-2xl font-bold !mt-0 !mb-0">Sponsoren & Großspender</h1>
+    </div>
+    
+    <div class="highlight-box">
+      Wir danken unseren Sponsoren und Großspendern herzlich für ihre großzügige Unterstützung! 
+      Durch ihr Engagement können wir unsere Kita und die Angebote für unsere Kinder stetig verbessern.
+    </div>
+    
+    <div class="sponsors-container">
+      {sponsors.length > 0 ? (
+        sponsors.map(sponsor => (
+          <div class="sponsor-card">
+            {sponsor.data.logo && (
+              <div class="sponsor-logo">
+                <img src={sponsor.data.logo} alt={`${sponsor.data.name} Logo`} />
               </div>
             )}
-            {sponsor.data.website && (
-              <p class="sponsor-website">
-                <a href={sponsor.data.website} target="_blank" rel="noopener noreferrer">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                  Website besuchen
-                </a>
-              </p>
-            )}
+            <div class="sponsor-content">
+              <h3 class="sponsor-name">
+                {sponsor.data.website ? (
+                  <a href={sponsor.data.website} target="_blank" rel="noopener noreferrer">
+                    {sponsor.data.name}
+                  </a>
+                ) : (
+                  sponsor.data.name
+                )}
+              </h3>
+              {sponsor.data.description && (
+                <p class="sponsor-description">{sponsor.data.description}</p>
+              )}
+              {sponsor.data.support && (
+                <div class="sponsor-support">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                  {sponsor.data.support}
+                </div>
+              )}
+              {sponsor.data.website && (
+                <p class="sponsor-website">
+                  <a href={sponsor.data.website} target="_blank" rel="noopener noreferrer">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5a17.92 17.92 0 0 1-8.716-4.247m0 0A8.966 8.966 0 0 1 3 12c0-1.97.633-3.794 1.707-5.27"/></svg>
+                    Website besuchen
+                  </a>
+                </p>
+              )}
+            </div>
           </div>
+        ))
+      ) : (
+        <div class="no-sponsors">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/></svg>
+          <p>Derzeit sind noch keine Sponsoren eingetragen.</p>
         </div>
-      ))
-    ) : (
-      <p class="no-sponsors">Derzeit sind noch keine Sponsoren eingetragen.</p>
-    )}
-  </div>
-  
-  <hr class="my-8" />
-  
-  <h2 class="text-xl font-bold mb-4">Sie möchten Sponsor oder Spender werden?</h2>
-  <p>
-    Wir freuen uns über jede Form der Unterstützung! Wenn Sie die Kita Knirpsenstadt als Sponsor unterstützen möchten, 
-    nehmen Sie gerne <a href="/impressum/" class="text-blue-600 hover:underline">Kontakt</a> mit uns auf.
-  </p>
+      )}
+    </div>
+    
+    <h2>Sie möchten Sponsor werden?</h2>
+    <p>
+      Wir freuen uns über jede Form der Unterstützung! Wenn Sie die Kita Knirpsenstadt als Sponsor unterstützen möchten, 
+      nehmen Sie gerne <a href="/impressum/">Kontakt</a> mit uns auf.
+    </p>
+  </article>
 </BaseLayout>
 
 <style>
   .sponsors-container {
     display: grid;
-    gap: 16px;
+    gap: 1rem;
+    margin-bottom: 2rem;
   }
   
   .sponsor-card {
     display: flex;
-    gap: 16px;
-    padding: 16px;
+    gap: 1.25rem;
+    padding: 1.25rem;
     background: #fff;
     border: 1px solid var(--border);
-    border-radius: 12px;
-    box-shadow: var(--shadow);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  
+  .sponsor-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
   }
   
   @media (max-width: 640px) {
@@ -91,13 +107,14 @@ const sponsors = await getCollection('sponsors');
   
   .sponsor-logo {
     flex-shrink: 0;
-    width: 120px;
-    height: 120px;
+    width: 100px;
+    height: 100px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f5fbe9;
-    border-radius: 8px;
+    background: var(--brand-50);
+    border: 1px solid var(--brand-100);
+    border-radius: var(--radius-md);
     overflow: hidden;
   }
   
@@ -112,9 +129,9 @@ const sponsors = await getCollection('sponsors');
   }
   
   .sponsor-name {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
     font-weight: 700;
-    margin-bottom: 8px;
+    margin: 0 0 0.5rem 0;
   }
   
   .sponsor-name a {
@@ -129,31 +146,65 @@ const sponsors = await getCollection('sponsors');
   
   .sponsor-description {
     color: var(--muted);
-    margin-bottom: 8px;
+    margin: 0 0 0.75rem 0;
+    line-height: 1.5;
   }
   
   .sponsor-support {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     font-size: 0.9rem;
-    color: var(--ink-700);
-    margin-bottom: 8px;
+    color: var(--brand-700);
+    margin-bottom: 0.75rem;
+  }
+  
+  .sponsor-support svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+  
+  .sponsor-website {
+    margin: 0;
   }
   
   .sponsor-website a {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 0.4rem;
     color: var(--brand-600);
     text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
   }
   
   .sponsor-website a:hover {
     text-decoration: underline;
   }
   
+  .sponsor-website svg {
+    width: 16px;
+    height: 16px;
+  }
+  
   .no-sponsors {
     text-align: center;
-    padding: 32px;
+    padding: 3rem 2rem;
+    background: var(--brand-50);
+    border: 1px solid var(--brand-100);
+    border-radius: var(--radius-lg);
+  }
+  
+  .no-sponsors svg {
+    width: 48px;
+    height: 48px;
+    color: var(--brand-300);
+    margin-bottom: 1rem;
+  }
+  
+  .no-sponsors p {
+    margin: 0;
     color: var(--muted);
-    font-style: italic;
   }
 </style>

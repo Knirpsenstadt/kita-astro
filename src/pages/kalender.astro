@@ -14,11 +14,22 @@ const eventsData = events.map(e => ({
 ---
 
 <BaseLayout title="Kalender">
-  <h1 class="text-2xl font-bold mb-6">Kalender</h1>
-  
-  <div id="events-list" data-events-list>
-    <script type="application/json" data-events set:html={JSON.stringify({ events: eventsData })}></script>
-  </div>
+  <article class="prose max-w-none bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
+    <div class="page-title-row">
+      <div class="page-title-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>
+      </div>
+      <h1 class="text-2xl font-bold !mt-0 !mb-0">Kalender</h1>
+    </div>
+    
+    <div class="highlight-box" style="margin-top: 1.5rem;">
+      Termine, Feste und Schließzeiten im Überblick
+    </div>
+    
+    <div id="events-list" data-events-list style="margin-top: 1.5rem;">
+      <script type="application/json" data-events set:html={JSON.stringify({ events: eventsData })}></script>
+    </div>
+  </article>
 </BaseLayout>
 
 <script define:vars={{ eventsListScript }}>
@@ -29,75 +40,93 @@ const eventsData = events.map(e => ({
 
 <style is:global>
   #events-list {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    box-shadow: var(--shadow);
-    padding: 16px;
+    background: var(--brand-50);
+    border: 1px solid var(--brand-100);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
   }
   
   .events-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
   }
   
   .events-filter {
     display: flex;
-    gap: 8px;
+    gap: 0.5rem;
+    flex-wrap: wrap;
   }
   
   .filter-btn {
-    padding: 4px 12px;
-    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
     border: 1px solid var(--border);
     background: #fff;
     cursor: pointer;
     font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--ink-600);
+    transition: all 0.2s;
+  }
+  
+  .filter-btn:hover {
+    border-color: var(--brand-200);
+    background: var(--brand-50);
   }
   
   .filter-btn.active {
-    background: var(--brand-50);
-    border-color: var(--brand-100);
+    background: var(--brand-600);
+    border-color: var(--brand-600);
+    color: white;
   }
   
   .events-list {
     display: grid;
-    gap: 8px;
+    gap: 0.75rem;
   }
   
   .event-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px;
+    gap: 1rem;
+    padding: 1rem;
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     background: #fff;
+    transition: transform 0.15s, box-shadow 0.15s;
   }
   
   .event-item:hover {
-    background: #f9fafb;
+    transform: translateX(4px);
+    box-shadow: var(--shadow-sm);
   }
   
   .event-date {
-    min-width: 80px;
+    min-width: 70px;
     text-align: center;
-    padding: 8px;
+    padding: 0.75rem;
     background: var(--brand-50);
-    border-radius: 8px;
+    border: 1px solid var(--brand-100);
+    border-radius: var(--radius-sm);
   }
   
   .event-date .day {
     font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--ink-700);
+    font-weight: 800;
+    color: var(--brand-800);
+    line-height: 1;
   }
   
   .event-date .month {
-    font-size: 0.85rem;
-    color: var(--muted);
+    font-size: 0.8rem;
+    color: var(--brand-700);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
   }
   
   .event-content {
@@ -105,8 +134,9 @@ const eventsData = events.map(e => ({
   }
   
   .event-title {
-    font-weight: 600;
+    font-weight: 700;
     color: var(--ink-700);
+    margin-bottom: 0.15rem;
   }
   
   .event-duration {
@@ -115,31 +145,39 @@ const eventsData = events.map(e => ({
   }
   
   .event-type {
-    padding: 2px 8px;
-    border-radius: 4px;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
+    letter-spacing: 0.025em;
   }
   
   .event-type.closure {
-    background: #ffd1d1;
-    color: #c53030;
+    background: #fecaca;
+    color: #991b1b;
   }
   
   .event-type.festivity {
-    background: #ccebd7;
-    color: #276749;
+    background: #bbf7d0;
+    color: #166534;
   }
   
   .event-type.event {
-    background: #d6e8ff;
-    color: #2b6cb0;
+    background: #bfdbfe;
+    color: #1e40af;
   }
   
   .no-events {
     text-align: center;
-    padding: 32px;
+    padding: 3rem 2rem;
     color: var(--muted);
+  }
+  
+  .no-events svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 1rem;
+    opacity: 0.4;
   }
 </style>

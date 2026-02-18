@@ -38,19 +38,19 @@ const navItems = [
     <title>{title} | Kita Knirpsenstadt</title>
   </head>
   <body class="min-h-screen pb-20">
-    <header class="navbar bg-[#DAEFB4] shadow-sm sticky top-0 z-50 px-4 lg:px-6">
+    <header class="navbar bg-[#DAEFB4] shadow-sm sticky top-0 z-50 px-4 lg:px-6 border-b border-[#c9e8a0]">
       <div class="navbar-start">
-        <a href="/" class="btn btn-ghost text-xl normal-case gap-2">
-          <img src="/img/logo.jpg" alt="Kita Knirpsenstadt" class="h-12 w-12 rounded-full" />
-          <span class="hidden sm:inline text-lg font-bold">Kita Knirpsenstadt e.V.</span>
+        <a href="/" class="btn btn-ghost text-xl normal-case gap-2 hover:bg-[#cde6a0]">
+          <img src="/img/logo.jpg" alt="Kita Knirpsenstadt" class="h-12 w-12 rounded-full border-2 border-white shadow-sm" />
+          <span class="hidden sm:inline text-lg font-bold text-[#3d6b2a]">Kita Knirpsenstadt e.V.</span>
         </a>
       </div>
       
       <div class="navbar-center hidden xl:flex">
-        <ul class="menu menu-horizontal px-1 text-base gap-0">
+        <ul class="menu menu-horizontal px-1 text-base gap-1">
           {navItems.map((item) => (
             <li>
-              <a href={item.href} class="px-3 xl:px-4">
+              <a href={item.href} class="px-3 xl:px-4 rounded-lg text-[#3d6b2a] hover:bg-[#cde6a0] transition-colors">
                 {item.label}
                 {item.badge && <sup> 🔴</sup>}
               </a>
@@ -61,14 +61,14 @@ const navItems = [
       
       <div class="navbar-end">
         <div class="dropdown dropdown-end">
-          <label tabindex="0" class="btn btn-ghost xl:hidden">
-            <i class="fas fa-bars text-xl"></i>
+          <label tabindex="0" class="btn btn-ghost xl:hidden hover:bg-[#cde6a0]">
+            <i class="fas fa-bars text-xl text-[#3d6b2a]"></i>
           </label>
-          <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-56 right-0">
-            <li><a href="/">Startseite</a></li>
+          <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow-md bg-white rounded-xl w-56 right-0 border border-gray-100">
+            <li><a href="/" class="rounded-lg">Startseite</a></li>
             {navItems.map((item) => (
               <li>
-                <a href={item.href}>
+                <a href={item.href} class="rounded-lg">
                   {item.label}
                   {item.badge && <sup> 🔴</sup>}
                 </a>
@@ -83,9 +83,12 @@ const navItems = [
       <slot />
     </main>
 
-    <footer class="fixed bottom-0 left-0 right-0 bg-[#DAEFB4] py-4 text-center z-40">
-      <p class="text-base mb-0">Elternverein Knirpsenstadt e.V.</p>
-      <a href="/impressum" class="hover:underline font-medium text-base">Kontakt &amp; Impressum</a>
+    <footer class="fixed bottom-0 left-0 right-0 bg-[#DAEFB4] py-4 text-center z-40 border-t border-[#c9e8a0]">
+      <p class="text-base mb-0 text-[#3d6b2a] font-semibold">Elternverein Knirpsenstadt e.V.</p>
+      <a href="/impressum" class="hover:underline font-medium text-base text-[#4a7a3a]">Kontakt &amp; Impressum</a>
+      <a href="/admin" class="admin-link" title="Admin">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+      </a>
     </footer>
   </body>
 </html>
@@ -94,14 +97,32 @@ const navItems = [
   @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
   
   :root {
+    /* Green palette - refined */
     --brand-50: #f5fbe9;
     --brand-100: #eaf6d3;
-    --brand-400: #c9ebb2;
+    --brand-200: #d4ecc0;
+    --brand-400: #a8d98a;
     --brand-600: #86c06a;
+    --brand-700: #5d9847;
+    --brand-800: #4a7a3a;
+    
+    /* Neutrals */
     --ink-700: #1f2937;
-    --muted: #4b5563;
-    --border: #e7eff7;
-    --shadow: 0 8px 24px rgba(16,24,40,.08), 0 2px 6px rgba(16,24,40,.04);
+    --ink-600: #374151;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --border-light: #f3f4f6;
+    
+    /* Shadows - softer, more refined */
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
+    --shadow: 0 4px 12px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-md: 0 8px 24px rgba(0,0,0,0.06), 0 2px 6px rgba(0,0,0,0.04);
+    
+    /* Consistent radii */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
   }
   
   html {
@@ -110,8 +131,9 @@ const navItems = [
   }
   
   body {
-    background: linear-gradient(180deg, #ffffff 0%, #fbfdff 60%, #f6fbff 100%);
+    background: #fafcf8;
     line-height: 1.7;
+    color: var(--ink-700);
   }
   
   .btn {
@@ -123,18 +145,23 @@ const navItems = [
     font-size: 2rem;
     font-weight: 800;
     margin-bottom: 1.5rem;
+    color: var(--brand-800);
+    letter-spacing: -0.01em;
   }
   
   h2 {
     font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 1rem;
+    color: var(--ink-700);
+    letter-spacing: -0.01em;
   }
   
   h3 {
     font-size: 1.25rem;
     font-weight: 700;
     margin-bottom: 0.75rem;
+    color: var(--ink-600);
   }
   
   p {
@@ -142,10 +169,444 @@ const navItems = [
   }
   
   a {
-    color: #5d9847;
+    color: var(--brand-700);
   }
   
   a:hover {
-    color: #4a7a3a;
+    color: var(--brand-800);
+  }
+  
+  /* Feature grid for content pages */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+  
+  .feature-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: var(--brand-50);
+    border: 1px solid var(--brand-100);
+    border-radius: var(--radius-md);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .feature-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .feature-icon {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .feature-icon svg {
+    width: 24px;
+    height: 24px;
+    color: var(--brand-700);
+  }
+  
+  .feature-content h3 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ink-700);
+  }
+  
+  .feature-content p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  
+  /* Admin link in footer */
+  .admin-link {
+    position: absolute;
+    right: 1rem;
+    bottom: 50%;
+    transform: translateY(50%);
+    opacity: 0.3;
+    transition: opacity 0.2s;
+  }
+  
+  .admin-link:hover {
+    opacity: 0.6;
+  }
+  
+  .admin-link svg {
+    width: 18px;
+    height: 18px;
+    color: var(--brand-800);
+  }
+  
+  footer {
+    position: relative;
+  }
+  
+  /* Page title row with icon */
+  .page-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .page-title-icon {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--brand-50);
+    border: 1px solid var(--brand-100);
+    border-radius: var(--radius-md);
+  }
+  
+  .page-title-icon svg {
+    width: 22px;
+    height: 22px;
+    color: var(--brand-700);
+  }
+  
+  /* Highlight box */
+  .highlight-box {
+    background: linear-gradient(135deg, var(--brand-50) 0%, var(--brand-100) 100%);
+    border-left: 4px solid var(--brand-600);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    padding: 1.25rem 1.5rem;
+    margin: 1.5rem 0;
+  }
+  
+  .highlight-box p {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--ink-700);
+    font-weight: 500;
+  }
+  
+  .highlight-box strong {
+    color: var(--brand-800);
+  }
+  
+  /* Info box (neutral) */
+  .info-box {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+    margin: 1.5rem 0;
+  }
+  
+  .info-box h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .info-box h3 svg {
+    width: 20px;
+    height: 20px;
+    color: var(--brand-700);
+  }
+  
+  /* Icon list */
+  .icon-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+  }
+  
+  .icon-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+  }
+  
+  .icon-list li svg {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    color: var(--brand-600);
+    margin-top: 2px;
+  }
+  
+  /* Two-column layout */
+  .two-columns {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+  }
+  
+  @media (min-width: 640px) {
+    .two-columns {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  
+  .column-card {
+    padding: 1.25rem;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+  
+  .column-card h3 {
+    margin: 0 0 0.75rem 0;
+    font-size: 1.1rem;
+    color: var(--brand-800);
+  }
+  
+  .column-card ul {
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+  
+  .column-card li {
+    margin: 0.35rem 0;
+    color: var(--ink-600);
+  }
+  
+  /* Badge/pill style */
+  .badge-green {
+    display: inline-block;
+    background: var(--brand-100);
+    color: var(--brand-800);
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  
+  /* Education areas grid - fixed 3 columns for 6 items */
+  .edu-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin: 1rem 0;
+  }
+  
+  @media (min-width: 640px) {
+    .edu-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  .edu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: border-color 0.2s, background 0.2s;
+  }
+  
+  .edu-item:hover {
+    border-color: var(--brand-200);
+    background: var(--brand-50);
+  }
+  
+  .edu-item svg {
+    width: 22px;
+    height: 22px;
+    color: var(--brand-600);
+    flex-shrink: 0;
+  }
+  
+  .edu-item span {
+    font-weight: 600;
+    color: var(--ink-700);
+    font-size: 0.9rem;
+    line-height: 1.3;
+  }
+  
+  /* Intro card styling for homepage */
+  .intro-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .intro-icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .intro-icon svg {
+    width: 26px;
+    height: 26px;
+    color: var(--brand-700);
+  }
+  
+  .intro-title {
+    margin: 0 0 0.25rem 0 !important;
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    color: var(--brand-800) !important;
+  }
+  
+  .intro-subtitle {
+    margin: 0 !important;
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+  
+  .intro-text {
+    margin: 0 0 1.25rem 0;
+    font-size: 1rem;
+    color: var(--ink-700);
+    line-height: 1.6;
+  }
+  
+  .group-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .group-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s;
+  }
+  
+  .group-badge:hover {
+    transform: scale(1.05);
+  }
+  
+  .group-badge svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .group-badge.snails {
+    color: #7c3aed;
+    border: 1px solid #ddd6fe;
+  }
+  
+  .group-badge.snails svg {
+    color: #7c3aed;
+  }
+  
+  .group-badge.hedgehogs {
+    color: #ea580c;
+    border: 1px solid #fed7aa;
+  }
+  
+  .group-badge.hedgehogs svg {
+    color: #ea580c;
+  }
+  
+  .group-badge.butterflies {
+    color: #0891b2;
+    border: 1px solid #a5f3fc;
+  }
+  
+  .group-badge.butterflies svg {
+    color: #0891b2;
+  }
+  
+  /* Document cards */
+  .doc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0 2rem 0;
+  }
+  
+  .doc-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  }
+  
+  .doc-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--brand-200);
+  }
+  
+  .doc-icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fef3c7;
+    border-radius: var(--radius-sm);
+    border: 1px solid #fde68a;
+  }
+  
+  .doc-icon svg {
+    width: 24px;
+    height: 24px;
+    color: #d97706;
+  }
+  
+  .doc-content h3 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ink-700);
+  }
+  
+  .doc-content p {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  
+  .doc-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    background: #fee2e2;
+    color: #dc2626;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
   }
 </style>

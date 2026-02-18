@@ -9,11 +9,17 @@ const { Content } = impressumPage ? await render(impressumPage) : { Content: nul
 
 <BaseLayout title="Kontakt & Impressum">
   {Content ? (
-    <article class="prose max-w-none bg-white rounded-xl shadow-sm border border-gray-100 p-6 lg:p-8">
+    <article class="prose max-w-none bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
+      <div class="page-title-row">
+        <div class="page-title-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>
+        </div>
+        <h1 class="text-2xl font-bold !mt-0 !mb-0">Kontakt & Impressum</h1>
+      </div>
       <Content />
     </article>
   ) : (
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 lg:p-8">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
       <h1>Impressum</h1>
       <p>Impressum nicht gefunden.</p>
     </div>
