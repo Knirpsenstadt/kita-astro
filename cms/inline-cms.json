@@ -6,7 +6,8 @@
     "sponsors.ctaText": "Wir freuen uns ueber jede Form der Unterstützung! Wenn Sie die Kita Knirpsenstadt als Sponsor unterstützen moechten, nehmen Sie gerne",
     "sponsors.ctaHeading": "Sie möchten Sponsor werden?",
     "sponsors.pageIntro": "Wir danken unseren Sponsoren und Großspendern herzlich fuer ihre großzügige Unterstützung! Durch ihr Engagement können wir unsere Kita und die Angebote fuer unsere Kinder stetig verbessern.",
-    "sponsors.pageTitle": "Sponsoren & Großspender"
+    "sponsors.pageTitle": "Sponsoren & Großspender",
+    "pages.vereinsleben.blocks.9.bodyText": "Das Kita-Leben aktiv mitgestalten - ob im Vorstand, bei Arbeitseinsätzen oder bei der Planung von Festen. Bei uns sind Eltern keine Zaungäste, sondern Teil der Gemeinschaft!"
   },
   "published": {
     "home.banner.text": "Aufnahmen ab Sommer/Herbst 2026 - Interesse gerne schon jetzt melden!",
@@ -19,12 +20,14 @@
   },
   "draftData": {
     "sponsors": [],
-    "carouselImages": []
+    "carouselImages": [],
+    "events": []
   },
   "publishedData": {
     "sponsors": [],
-    "carouselImages": []
+    "carouselImages": [],
+    "events": []
   },
-  "updatedAt": "2026-02-20T14:17:04.085Z",
+  "updatedAt": "2026-03-17T14:16:03.324Z",
   "publishedAt": "2026-02-20T14:17:04.085Z"
 }
