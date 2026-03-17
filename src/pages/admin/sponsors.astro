@@ -1,0 +1,465 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import { getSession } from '../../lib/cms/auth'
+
+const session = getSession(Astro.cookies)
+
+if (!session) {
+  return Astro.redirect('/admin?next=/admin/sponsors')
+}
+
+const csrfToken = session.csrf
+---
+
+<BaseLayout title="Admin - Sponsoren" description="Sponsorenverwaltung">
+  <article class="admin-shell">
+    <div class="admin-head">
+      <h1>Sponsoren verwalten</h1>
+      <div class="admin-actions">
+        <a class="admin-btn subtle" href="/admin">Zurueck</a>
+        <button type="button" id="load-live-btn" class="admin-btn subtle">Live-Daten laden</button>
+        <button type="button" id="load-baseline-btn" class="admin-btn subtle">Website-Standard laden</button>
+        <button type="button" id="add-sponsor-btn" class="admin-btn subtle">Sponsor hinzufuegen</button>
+        <button type="button" id="save-sponsors-btn" class="admin-btn">Entwurf speichern</button>
+        <button type="button" id="publish-btn" class="admin-btn">Publizieren</button>
+      </div>
+    </div>
+
+    <p class="admin-intro">Alle Sponsoren sind als Liste sichtbar. Reihenfolge mit den Pfeil-Buttons.</p>
+    <p id="source-hint" class="source-hint"></p>
+    <p id="admin-status" class="admin-state" aria-live="polite"></p>
+
+    <div id="sponsor-list" class="cms-list"></div>
+  </article>
+</BaseLayout>
+
+<script define:vars={{ csrfToken }}>
+  const state = {
+    sponsors: [],
+    publishedSponsors: [],
+    baselineSponsors: [],
+    source: 'draft',
+  };
+
+  function createId(prefix) {
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  function escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function setStatus(text, isError) {
+    const node = document.getElementById('admin-status');
+    if (!node) return;
+    node.textContent = text;
+    node.classList.toggle('error', !!isError);
+  }
+
+  function setSourceHint() {
+    const node = document.getElementById('source-hint');
+    if (!node) return;
+    const label = state.source === 'baseline' ? 'Website-Standard' : state.source === 'published' ? 'Live' : 'Entwurf';
+    node.textContent = `Aktuelle Quelle: ${label} (${state.sponsors.length} Eintraege)`;
+  }
+
+  function markDraftSource() {
+    state.source = 'draft';
+    setSourceHint();
+  }
+
+  async function api(url, options) {
+    const response = await fetch(url, options);
+    const result = await response.json().catch(() => ({ error: 'Unerwartete Antwort.' }));
+    if (!response.ok) {
+      throw new Error(result.error || 'Anfrage fehlgeschlagen.');
+    }
+    return result;
+  }
+
+  function moveItem(list, fromIndex, toIndex) {
+    if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return;
+    if (fromIndex >= list.length || toIndex >= list.length) return;
+    const [item] = list.splice(fromIndex, 1);
+    list.splice(toIndex, 0, item);
+  }
+
+  function bindSponsorCard(container, index) {
+    const sponsor = state.sponsors[index];
+
+    container.querySelector('[data-field="name"]')?.addEventListener('input', (event) => {
+      sponsor.name = event.currentTarget.value;
+      markDraftSource();
+    });
+
+    container.querySelector('[data-field="website"]')?.addEventListener('input', (event) => {
+      sponsor.website = event.currentTarget.value;
+      markDraftSource();
+    });
+
+    container.querySelector('[data-field="description"]')?.addEventListener('input', (event) => {
+      sponsor.description = event.currentTarget.value;
+      markDraftSource();
+    });
+
+    container.querySelector('[data-field="support"]')?.addEventListener('input', (event) => {
+      sponsor.support = event.currentTarget.value;
+      markDraftSource();
+    });
+
+    container.querySelector('[data-field="logo"]')?.addEventListener('input', (event) => {
+      sponsor.logo = event.currentTarget.value;
+      markDraftSource();
+      renderSponsors();
+    });
+
+    container.querySelector('[data-action="up"]')?.addEventListener('click', () => {
+      if (index === 0) return;
+      moveItem(state.sponsors, index, index - 1);
+      markDraftSource();
+      renderSponsors();
+    });
+
+    container.querySelector('[data-action="down"]')?.addEventListener('click', () => {
+      if (index >= state.sponsors.length - 1) return;
+      moveItem(state.sponsors, index, index + 1);
+      markDraftSource();
+      renderSponsors();
+    });
+
+    container.querySelector('[data-action="remove"]')?.addEventListener('click', () => {
+      const sponsorName = (sponsor.name || 'diesen Sponsor').trim();
+      if (!window.confirm(`Sponsor "${sponsorName}" wirklich loeschen?`)) return;
+      state.sponsors.splice(index, 1);
+      markDraftSource();
+      renderSponsors();
+    });
+
+    container.querySelector('[data-action="upload-logo"]')?.addEventListener('click', () => {
+      container.querySelector('[data-field="logo-upload"]')?.click();
+    });
+
+    container.querySelector('[data-field="logo-upload"]')?.addEventListener('change', async (event) => {
+      const input = event.currentTarget;
+      const file = input?.files?.[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('category', 'sponsors');
+
+      try {
+        setStatus('Logo wird hochgeladen ...');
+        const result = await api('/api/admin/upload', {
+          method: 'POST',
+          headers: { 'x-cms-csrf': csrfToken },
+          body: formData,
+        });
+        sponsor.logo = result.src;
+        markDraftSource();
+        renderSponsors();
+        setStatus('Logo hochgeladen. Nicht vergessen zu speichern.');
+      } catch (error) {
+        setStatus(error.message, true);
+      }
+    });
+
+  }
+
+  function renderSponsors() {
+    const list = document.getElementById('sponsor-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    if (state.sponsors.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'empty-state';
+      empty.textContent = 'Keine Sponsoren im Entwurf.';
+      list.appendChild(empty);
+      return;
+    }
+
+    state.sponsors.forEach((sponsor, index) => {
+      const card = document.createElement('div');
+      card.className = 'item-card';
+      card.innerHTML =
+        '<div class="item-header">' +
+          '<span class="item-position">' + (index + 1) + '</span>' +
+          '<div class="item-actions">' +
+            '<button type="button" class="admin-btn subtle small" data-action="up">▲</button>' +
+            '<button type="button" class="admin-btn subtle small" data-action="down">▼</button>' +
+            '<button type="button" class="admin-btn danger small" data-action="remove">Entfernen</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="item-grid">' +
+          '<label>Name<input data-field="name" type="text" value="' + escapeHtml(sponsor.name) + '" /></label>' +
+          '<label>Website<input data-field="website" type="url" value="' + escapeHtml(sponsor.website) + '" placeholder="https://..." /></label>' +
+          '<label>Beschreibung<textarea data-field="description" rows="2">' + escapeHtml(sponsor.description) + '</textarea></label>' +
+          '<label>Unterstuetzung<textarea data-field="support" rows="2">' + escapeHtml(sponsor.support) + '</textarea></label>' +
+          '<label>Logo URL<input data-field="logo" type="text" value="' + escapeHtml(sponsor.logo) + '" placeholder="/img/... oder https://..." /></label>' +
+        '</div>' +
+        '<div class="item-footer">' +
+          '<button type="button" class="admin-btn subtle" data-action="upload-logo">Logo hochladen</button>' +
+          '<input data-field="logo-upload" type="file" accept="image/*" hidden />' +
+          (sponsor.logo
+            ? '<img class="preview-img" src="' + escapeHtml(sponsor.logo) + '" alt="Logo Vorschau" />'
+            : '<span class="empty-inline">Kein Logo</span>') +
+        '</div>';
+
+      list.appendChild(card);
+      bindSponsorCard(card, index);
+    });
+  }
+
+  async function loadCollections() {
+    const result = await api('/api/admin/collections');
+    const draftSponsors = Array.isArray(result?.draftData?.sponsors) ? result.draftData.sponsors : [];
+    const publishedSponsors = Array.isArray(result?.publishedData?.sponsors) ? result.publishedData.sponsors : [];
+    const baselineSponsors = Array.isArray(result?.baselineData?.sponsors) ? result.baselineData.sponsors : [];
+
+    state.publishedSponsors = publishedSponsors;
+    state.baselineSponsors = baselineSponsors;
+
+    const shouldPreferBaseline = draftSponsors.length <= 1 && publishedSponsors.length <= 1 && baselineSponsors.length > 1;
+    state.sponsors = shouldPreferBaseline ? baselineSponsors : draftSponsors;
+    state.source = shouldPreferBaseline ? 'baseline' : 'draft';
+    setSourceHint();
+    renderSponsors();
+  }
+
+  async function saveSponsors() {
+    await api('/api/admin/collections', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-cms-csrf': csrfToken,
+      },
+      body: JSON.stringify({ sponsors: state.sponsors }),
+    });
+  }
+
+  document.getElementById('add-sponsor-btn')?.addEventListener('click', () => {
+    state.sponsors.push({ id: createId('sponsor'), name: '', website: '', description: '', support: '', logo: '' });
+    markDraftSource();
+    renderSponsors();
+  });
+
+  document.getElementById('load-live-btn')?.addEventListener('click', () => {
+    if (state.publishedSponsors.length === 0) {
+      setStatus('Keine Live-Sponsoren gefunden.');
+      return;
+    }
+    if (!window.confirm('Entwurf mit Live-Daten ersetzen? Nicht gespeicherte Aenderungen gehen verloren.')) return;
+    state.sponsors = state.publishedSponsors.map((item) => ({ ...item }));
+    state.source = 'published';
+    setSourceHint();
+    renderSponsors();
+    setStatus('Live-Daten geladen. Jetzt speichern, wenn du sie behalten willst.');
+  });
+
+  document.getElementById('load-baseline-btn')?.addEventListener('click', () => {
+    if (state.baselineSponsors.length === 0) {
+      setStatus('Keine Website-Standarddaten gefunden.');
+      return;
+    }
+    if (!window.confirm('Entwurf mit Website-Standard ersetzen? Nicht gespeicherte Aenderungen gehen verloren.')) return;
+    state.sponsors = state.baselineSponsors.map((item) => ({ ...item }));
+    state.source = 'baseline';
+    setSourceHint();
+    renderSponsors();
+    setStatus('Website-Standard geladen. Jetzt speichern, wenn du ihn behalten willst.');
+  });
+
+  document.getElementById('save-sponsors-btn')?.addEventListener('click', async () => {
+    try {
+      setStatus('Speichere Entwurf ...');
+      await saveSponsors();
+      setStatus('Entwurf gespeichert.');
+    } catch (error) {
+      setStatus(error.message, true);
+    }
+  });
+
+  document.getElementById('publish-btn')?.addEventListener('click', async () => {
+    try {
+      setStatus('Publiziere Entwurf ...');
+      await api('/api/admin/publish', {
+        method: 'POST',
+        headers: { 'x-cms-csrf': csrfToken },
+      });
+      setStatus('Erfolgreich publiziert.');
+    } catch (error) {
+      setStatus(error.message, true);
+    }
+  });
+
+  loadCollections().catch((error) => setStatus(error.message, true));
+</script>
+
+<style is:global>
+  .admin-shell {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    gap: 0.9rem;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.2rem;
+  }
+
+  .admin-head {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .admin-head h1,
+  .admin-head p {
+    margin: 0;
+  }
+
+  .admin-intro {
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .source-hint {
+    margin: 0;
+    color: var(--ink-600);
+    font-size: 0.92rem;
+  }
+
+  .cms-list {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .item-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: #fafafa;
+    padding: 0.75rem;
+    display: grid;
+    gap: 0.7rem;
+  }
+
+  .item-header,
+  .item-actions,
+  .item-footer,
+  .admin-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: space-between;
+  }
+
+  .item-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .item-grid label {
+    display: grid;
+    gap: 0.25rem;
+    font-size: 0.84rem;
+    color: var(--ink-600);
+    font-weight: 700;
+  }
+
+  .item-grid label:nth-child(3),
+  .item-grid label:nth-child(4),
+  .item-grid label:nth-child(5) {
+    grid-column: 1 / -1;
+  }
+
+  .item-grid input,
+  .item-grid textarea {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.55rem 0.65rem;
+    font-size: 0.94rem;
+  }
+
+  .preview-img,
+  img.preview-img {
+    width: 88px !important;
+    max-width: 88px !important;
+    min-width: 88px;
+    height: 88px !important;
+    object-fit: contain;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    padding: 4px;
+  }
+
+  .item-position {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 999px;
+    background: var(--brand-100);
+    color: var(--brand-800);
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  .empty-inline,
+  .empty-state {
+    color: var(--muted);
+  }
+
+  .admin-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 999px;
+    background: var(--brand-700);
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 0.5rem 0.95rem;
+    cursor: pointer;
+  }
+
+  .admin-btn.subtle {
+    background: var(--ink-600);
+  }
+
+  .admin-btn.danger {
+    background: #b91c1c;
+  }
+
+  .admin-btn.small {
+    min-width: 2.2rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .admin-state {
+    min-height: 1.2rem;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .admin-state.error,
+  .admin-state.error * {
+    color: #b91c1c;
+    font-weight: 700;
+  }
+
+  @media (max-width: 780px) {
+    .item-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

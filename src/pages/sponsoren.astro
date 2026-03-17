@@ -1,55 +1,65 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
+import { getCmsRuntime } from '../lib/cms/runtime';
 
 const sponsors = await getCollection('sponsors');
+const cms = await getCmsRuntime(Astro);
+const defaultSponsors = sponsors.map((entry) => ({
+  id: entry.id,
+  name: entry.data.name,
+  logo: entry.data.logo || '',
+  website: entry.data.website || '',
+  description: entry.data.description || '',
+  support: entry.data.support || '',
+}));
+const sponsorItems = cms.sponsors(defaultSponsors);
 ---
 
-<BaseLayout title="Sponsoren/Großspender">
+<BaseLayout title={cms.text('sponsors.pageTitle', 'Sponsoren/Grossspender')} cms={cms}>
   <article class="prose max-w-none bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
     <div class="page-title-row">
       <div class="page-title-icon">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/></svg>
       </div>
-      <h1 class="text-2xl font-bold !mt-0 !mb-0">Sponsoren & Großspender</h1>
+      <h1 class="text-2xl font-bold !mt-0 !mb-0" {...cms.attrs('sponsors.pageTitle')}>{cms.text('sponsors.pageTitle', 'Sponsoren & Grossspender')}</h1>
     </div>
-    
+
     <div class="highlight-box">
-      Wir danken unseren Sponsoren und Großspendern herzlich für ihre großzügige Unterstützung! 
-      Durch ihr Engagement können wir unsere Kita und die Angebote für unsere Kinder stetig verbessern.
+      <span {...cms.attrs('sponsors.pageIntro')}>{cms.text('sponsors.pageIntro', 'Wir danken unseren Sponsoren und Grossspendern herzlich fuer ihre grosszuegige Unterstuetzung! Durch ihr Engagement koennen wir unsere Kita und die Angebote fuer unsere Kinder stetig verbessern.')}</span>
     </div>
     
     <div class="sponsors-container">
-      {sponsors.length > 0 ? (
-        sponsors.map(sponsor => (
+      {sponsorItems.length > 0 ? (
+        sponsorItems.map((sponsor) => (
           <div class="sponsor-card">
-            {sponsor.data.logo && (
+            {sponsor.logo && (
               <div class="sponsor-logo">
-                <img src={sponsor.data.logo} alt={`${sponsor.data.name} Logo`} />
+                <img src={sponsor.logo} alt={`${sponsor.name} Logo`} />
               </div>
             )}
             <div class="sponsor-content">
               <h3 class="sponsor-name">
-                {sponsor.data.website ? (
-                  <a href={sponsor.data.website} target="_blank" rel="noopener noreferrer">
-                    {sponsor.data.name}
+                {sponsor.website ? (
+                  <a href={sponsor.website} target="_blank" rel="noopener noreferrer">
+                    {sponsor.name}
                   </a>
                 ) : (
-                  sponsor.data.name
+                  sponsor.name
                 )}
               </h3>
-              {sponsor.data.description && (
-                <p class="sponsor-description">{sponsor.data.description}</p>
+              {sponsor.description && (
+                <p class="sponsor-description">{sponsor.description}</p>
               )}
-              {sponsor.data.support && (
+              {sponsor.support && (
                 <div class="sponsor-support">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
-                  {sponsor.data.support}
+                  <span>{sponsor.support}</span>
                 </div>
               )}
-              {sponsor.data.website && (
+              {sponsor.website && (
                 <p class="sponsor-website">
-                  <a href={sponsor.data.website} target="_blank" rel="noopener noreferrer">
+                  <a href={sponsor.website} target="_blank" rel="noopener noreferrer">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5a17.92 17.92 0 0 1-8.716-4.247m0 0A8.966 8.966 0 0 1 3 12c0-1.97.633-3.794 1.707-5.27"/></svg>
                     Website besuchen
                   </a>
@@ -61,15 +71,18 @@ const sponsors = await getCollection('sponsors');
       ) : (
         <div class="no-sponsors">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/></svg>
-          <p>Derzeit sind noch keine Sponsoren eingetragen.</p>
+          <p {...cms.attrs('sponsors.emptyText')}>{cms.text('sponsors.emptyText', 'Derzeit sind noch keine Sponsoren eingetragen.')}</p>
         </div>
       )}
     </div>
-    
-    <h2>Sie möchten Sponsor werden?</h2>
+
+    <h2 {...cms.attrs('sponsors.ctaHeading')}>{cms.text('sponsors.ctaHeading', 'Sie moechten Sponsor werden?')}</h2>
     <p>
-      Wir freuen uns über jede Form der Unterstützung! Wenn Sie die Kita Knirpsenstadt als Sponsor unterstützen möchten, 
-      nehmen Sie gerne <a href="/impressum/">Kontakt</a> mit uns auf.
+      <span {...cms.attrs('sponsors.ctaText')}>{cms.text('sponsors.ctaText', 'Wir freuen uns ueber jede Form der Unterstuetzung! Wenn Sie die Kita Knirpsenstadt als Sponsor unterstuetzen moechten, nehmen Sie gerne')}</span>
+      {' '}
+      <a href="/impressum/">Kontakt</a>
+      {' '}
+      <span {...cms.attrs('sponsors.ctaTextSuffix')}>{cms.text('sponsors.ctaTextSuffix', 'mit uns auf.')}</span>
     </p>
   </article>
 </BaseLayout>

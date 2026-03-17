@@ -1,15 +1,236 @@
 ---
-// Redirect to Keystatic admin
+import BaseLayout from '../layouts/BaseLayout.astro'
+import { getSession, safeRedirectPath } from '../lib/cms/auth'
+
+const session = getSession(Astro.cookies)
+const nextPath = safeRedirectPath(Astro.url.searchParams.get('next'))
+const csrfToken = session?.csrf || ''
 ---
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="refresh" content="0; url=/keystatic">
-  <link rel="canonical" href="/keystatic">
-  <title>Redirecting to Admin...</title>
-</head>
-<body>
-  <p>Redirecting to <a href="/keystatic">Keystatic</a>...</p>
-</body>
-</html>
+
+<BaseLayout title="Admin" description="Inline CMS Login">
+  <article class="admin-shell">
+    <h1>Inline CMS</h1>
+    <p class="admin-intro">Bitte waehle den Bereich, den du bearbeiten moechtest.</p>
+
+    {session ? (
+      <>
+        <div class="admin-card">
+          <p class="admin-state ok">Du bist angemeldet.</p>
+          <div class="admin-actions">
+            <a class="admin-btn" href={`/vorschau?redirect=${encodeURIComponent(nextPath)}`}>Vorschau (Entwurf)</a>
+            <a class="admin-btn subtle" href={`/live?redirect=${encodeURIComponent(nextPath)}`}>Live Ansicht</a>
+            <button type="button" id="publish-btn" class="admin-btn">Entwurf publizieren</button>
+            <button type="button" id="logout-btn" class="admin-btn danger">Abmelden</button>
+          </div>
+          <p id="admin-status" class="admin-state" aria-live="polite"></p>
+        </div>
+
+        <div class="admin-grid">
+          <a href="/admin/sponsors" class="admin-panel-link">
+            <h2>Sponsoren</h2>
+            <p>Sponsoren anlegen, bearbeiten, mit Pfeilen sortieren und Logos hochladen.</p>
+          </a>
+          <a href="/admin/carousel" class="admin-panel-link">
+            <h2>Karussell</h2>
+            <p>Alle Startseitenbilder als Liste sehen, mit Pfeilen sortieren und austauschen.</p>
+          </a>
+          <a href="/admin/calendar" class="admin-panel-link">
+            <h2>Kalender</h2>
+            <p>Alle Termine als Liste bearbeiten, sortieren und als Entwurf speichern.</p>
+          </a>
+          <a href="/vorschau" class="admin-panel-link">
+            <h2>Inline Texte</h2>
+            <p>Texte direkt auf der Seite bearbeiten (Vorschau-Modus).</p>
+          </a>
+        </div>
+      </>
+    ) : (
+      <form id="login-form" class="admin-card">
+        <label for="password">Passwort</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required />
+        <button class="admin-btn" type="submit">Anmelden</button>
+        <p id="login-status" class="admin-state" aria-live="polite"></p>
+      </form>
+    )}
+  </article>
+</BaseLayout>
+
+<script define:vars={{ isAuthenticated: !!session, nextPath, csrfToken }}>
+  async function api(url, options) {
+    const response = await fetch(url, options);
+    const result = await response.json().catch(() => ({ error: 'Unerwartete Antwort.' }));
+    if (!response.ok) {
+      throw new Error(result.error || 'Anfrage fehlgeschlagen.');
+    }
+    return result;
+  }
+
+  function setStatus(text, isError) {
+    const statusNode = document.getElementById('admin-status') || document.getElementById('login-status');
+    if (!statusNode) return;
+    statusNode.textContent = text;
+    statusNode.classList.toggle('error', !!isError);
+  }
+
+  if (isAuthenticated) {
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
+      await fetch('/api/admin/logout', { method: 'POST' });
+      window.location.reload();
+    });
+
+    document.getElementById('publish-btn')?.addEventListener('click', async () => {
+      try {
+        setStatus('Publiziere Entwurf ...');
+        await api('/api/admin/publish', {
+          method: 'POST',
+          headers: { 'x-cms-csrf': csrfToken },
+        });
+        setStatus('Erfolgreich publiziert.');
+      } catch (error) {
+        setStatus(error.message, true);
+      }
+    });
+  } else {
+    const form = document.getElementById('login-form');
+    const status = document.getElementById('login-status');
+
+    form?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const passwordInput = document.getElementById('password');
+      const password = passwordInput?.value || '';
+
+      status.textContent = 'Anmeldung laeuft ...';
+      status.classList.remove('error');
+
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+
+      const result = await response.json().catch(() => ({ error: 'Anmeldung fehlgeschlagen.' }));
+      if (!response.ok) {
+        status.textContent = result.error || 'Anmeldung fehlgeschlagen.';
+        status.classList.add('error');
+        return;
+      }
+
+      if (nextPath && nextPath !== '/') {
+        window.location.href = `/vorschau?redirect=${encodeURIComponent(nextPath)}`;
+      } else {
+        window.location.href = '/admin';
+      }
+    });
+  }
+</script>
+
+<style is:global>
+  .admin-shell {
+    max-width: 1040px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    padding: 1.5rem;
+    display: grid;
+    gap: 1rem;
+  }
+
+  .admin-intro {
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .admin-card {
+    display: grid;
+    gap: 0.75rem;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+  }
+
+  .admin-card input {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.65rem;
+  }
+
+  .admin-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .admin-panel-link {
+    display: grid;
+    gap: 0.4rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    text-decoration: none;
+    color: var(--ink-700);
+    background: #fafafa;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .admin-panel-link:hover {
+    border-color: var(--brand-400);
+    background: var(--brand-50);
+  }
+
+  .admin-panel-link h2 {
+    margin: 0;
+  }
+
+  .admin-panel-link p {
+    margin: 0;
+    color: var(--muted);
+  }
+
+  .admin-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 999px;
+    background: var(--brand-700);
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 0.55rem 1rem;
+    cursor: pointer;
+  }
+
+  .admin-btn.subtle {
+    background: var(--ink-600);
+  }
+
+  .admin-btn.danger {
+    background: #b91c1c;
+  }
+
+  .admin-state {
+    min-height: 1.2rem;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .admin-state.ok {
+    color: #166534;
+    font-weight: 700;
+  }
+
+  .admin-state.error,
+  .admin-state.error * {
+    color: #b91c1c;
+    font-weight: 700;
+  }
+</style>

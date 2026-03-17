@@ -1,0 +1,424 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import { getSession } from '../../lib/cms/auth'
+
+const session = getSession(Astro.cookies)
+
+if (!session) {
+  return Astro.redirect('/admin?next=/admin/carousel')
+}
+
+const csrfToken = session.csrf
+---
+
+<BaseLayout title="Admin - Karussell" description="Karussellverwaltung">
+  <article class="admin-shell">
+    <div class="admin-head">
+      <h1>Karussell Bilder</h1>
+      <div class="admin-actions">
+        <a class="admin-btn subtle" href="/admin">Zurueck</a>
+        <button type="button" id="load-live-btn" class="admin-btn subtle">Live-Daten laden</button>
+        <button type="button" id="load-baseline-btn" class="admin-btn subtle">Website-Standard laden</button>
+        <button type="button" id="save-carousel-btn" class="admin-btn">Entwurf speichern</button>
+        <button type="button" id="publish-btn" class="admin-btn">Publizieren</button>
+      </div>
+    </div>
+
+    <p class="admin-intro">Jedes Bild ist als eigene Zeile sichtbar. Reihenfolge mit den Pfeil-Buttons.</p>
+    <p id="source-hint" class="source-hint"></p>
+    <p id="admin-status" class="admin-state" aria-live="polite"></p>
+
+    <div class="add-row">
+      <input id="new-carousel-url" type="url" placeholder="https://... oder /img/..." />
+      <button type="button" id="add-carousel-url-btn" class="admin-btn subtle">URL hinzufuegen</button>
+      <button type="button" id="upload-carousel-btn" class="admin-btn subtle">Bild hochladen</button>
+      <input id="upload-carousel-input" type="file" accept="image/*" hidden />
+    </div>
+
+    <div id="carousel-list" class="cms-list"></div>
+  </article>
+</BaseLayout>
+
+<script define:vars={{ csrfToken }}>
+  const state = {
+    carouselImages: [],
+    publishedCarouselImages: [],
+    baselineCarouselImages: [],
+    source: 'draft',
+  };
+
+  function escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function setStatus(text, isError) {
+    const node = document.getElementById('admin-status');
+    if (!node) return;
+    node.textContent = text;
+    node.classList.toggle('error', !!isError);
+  }
+
+  function setSourceHint() {
+    const node = document.getElementById('source-hint');
+    if (!node) return;
+    const label = state.source === 'baseline' ? 'Website-Standard' : state.source === 'published' ? 'Live' : 'Entwurf';
+    node.textContent = `Aktuelle Quelle: ${label} (${state.carouselImages.length} Bilder)`;
+  }
+
+  function markDraftSource() {
+    state.source = 'draft';
+    setSourceHint();
+  }
+
+  async function api(url, options) {
+    const response = await fetch(url, options);
+    const result = await response.json().catch(() => ({ error: 'Unerwartete Antwort.' }));
+    if (!response.ok) {
+      throw new Error(result.error || 'Anfrage fehlgeschlagen.');
+    }
+    return result;
+  }
+
+  function moveItem(list, fromIndex, toIndex) {
+    if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return;
+    if (fromIndex >= list.length || toIndex >= list.length) return;
+    const [item] = list.splice(fromIndex, 1);
+    list.splice(toIndex, 0, item);
+  }
+
+  function renderCarousel() {
+    const list = document.getElementById('carousel-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    if (state.carouselImages.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'empty-state';
+      empty.textContent = 'Keine Karussellbilder im Entwurf.';
+      list.appendChild(empty);
+      return;
+    }
+
+    state.carouselImages.forEach((src, index) => {
+      const row = document.createElement('div');
+      row.className = 'item-row';
+      row.innerHTML =
+        '<span class="item-position">' + (index + 1) + '</span>' +
+        '<img class="preview-thumb" src="' + escapeHtml(src) + '" alt="Bild Vorschau" />' +
+        '<input type="text" value="' + escapeHtml(src) + '" />' +
+        '<div class="row-actions">' +
+          '<button type="button" class="admin-btn subtle small" data-action="up">▲</button>' +
+          '<button type="button" class="admin-btn subtle small" data-action="down">▼</button>' +
+          '<button type="button" class="admin-btn danger" data-action="remove">Entfernen</button>' +
+        '</div>';
+
+      row.querySelector('input')?.addEventListener('input', (event) => {
+        state.carouselImages[index] = event.currentTarget.value;
+        markDraftSource();
+      });
+
+      row.querySelector('[data-action="up"]')?.addEventListener('click', () => {
+        if (index === 0) return;
+        moveItem(state.carouselImages, index, index - 1);
+        markDraftSource();
+        renderCarousel();
+      });
+
+      row.querySelector('[data-action="down"]')?.addEventListener('click', () => {
+        if (index >= state.carouselImages.length - 1) return;
+        moveItem(state.carouselImages, index, index + 1);
+        markDraftSource();
+        renderCarousel();
+      });
+
+      row.querySelector('[data-action="remove"]')?.addEventListener('click', () => {
+        if (!window.confirm('Dieses Karussellbild wirklich entfernen?')) return;
+        state.carouselImages.splice(index, 1);
+        markDraftSource();
+        renderCarousel();
+      });
+
+      list.appendChild(row);
+    });
+  }
+
+  async function loadCollections() {
+    const result = await api('/api/admin/collections');
+    const draftCarouselImages = Array.isArray(result?.draftData?.carouselImages) ? result.draftData.carouselImages : [];
+    const publishedCarouselImages = Array.isArray(result?.publishedData?.carouselImages)
+      ? result.publishedData.carouselImages
+      : [];
+    const baselineCarouselImages = Array.isArray(result?.baselineData?.carouselImages)
+      ? result.baselineData.carouselImages
+      : [];
+
+    state.publishedCarouselImages = publishedCarouselImages;
+    state.baselineCarouselImages = baselineCarouselImages;
+
+    const shouldPreferBaseline =
+      draftCarouselImages.length <= 1 && publishedCarouselImages.length <= 1 && baselineCarouselImages.length > 1;
+    state.carouselImages = shouldPreferBaseline ? baselineCarouselImages : draftCarouselImages;
+    state.source = shouldPreferBaseline ? 'baseline' : 'draft';
+    setSourceHint();
+    renderCarousel();
+  }
+
+  async function saveCarousel() {
+    await api('/api/admin/collections', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-cms-csrf': csrfToken,
+      },
+      body: JSON.stringify({ carouselImages: state.carouselImages }),
+    });
+  }
+
+  document.getElementById('load-live-btn')?.addEventListener('click', () => {
+    if (state.publishedCarouselImages.length === 0) {
+      setStatus('Keine Live-Karussellbilder gefunden.');
+      return;
+    }
+    if (!window.confirm('Entwurf mit Live-Daten ersetzen? Nicht gespeicherte Aenderungen gehen verloren.')) return;
+    state.carouselImages = [...state.publishedCarouselImages];
+    state.source = 'published';
+    setSourceHint();
+    renderCarousel();
+    setStatus('Live-Daten geladen. Jetzt speichern, wenn du sie behalten willst.');
+  });
+
+  document.getElementById('load-baseline-btn')?.addEventListener('click', () => {
+    if (state.baselineCarouselImages.length === 0) {
+      setStatus('Keine Website-Standarddaten gefunden.');
+      return;
+    }
+    if (!window.confirm('Entwurf mit Website-Standard ersetzen? Nicht gespeicherte Aenderungen gehen verloren.')) return;
+    state.carouselImages = [...state.baselineCarouselImages];
+    state.source = 'baseline';
+    setSourceHint();
+    renderCarousel();
+    setStatus('Website-Standard geladen. Jetzt speichern, wenn du ihn behalten willst.');
+  });
+
+  document.getElementById('add-carousel-url-btn')?.addEventListener('click', () => {
+    const input = document.getElementById('new-carousel-url');
+    const value = input?.value?.trim() || '';
+    if (!value) return;
+    state.carouselImages.push(value);
+    markDraftSource();
+    input.value = '';
+    renderCarousel();
+  });
+
+  document.getElementById('upload-carousel-btn')?.addEventListener('click', () => {
+    document.getElementById('upload-carousel-input')?.click();
+  });
+
+  document.getElementById('upload-carousel-input')?.addEventListener('change', async (event) => {
+    const input = event.currentTarget;
+    const file = input?.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('category', 'carousel');
+
+    try {
+      setStatus('Bild wird hochgeladen ...');
+      const result = await api('/api/admin/upload', {
+        method: 'POST',
+        headers: { 'x-cms-csrf': csrfToken },
+        body: formData,
+      });
+      state.carouselImages.push(result.src);
+      markDraftSource();
+      renderCarousel();
+      setStatus('Bild hochgeladen. Nicht vergessen zu speichern.');
+    } catch (error) {
+      setStatus(error.message, true);
+    }
+  });
+
+  document.getElementById('save-carousel-btn')?.addEventListener('click', async () => {
+    try {
+      setStatus('Speichere Entwurf ...');
+      await saveCarousel();
+      setStatus('Entwurf gespeichert.');
+    } catch (error) {
+      setStatus(error.message, true);
+    }
+  });
+
+  document.getElementById('publish-btn')?.addEventListener('click', async () => {
+    try {
+      setStatus('Publiziere Entwurf ...');
+      await api('/api/admin/publish', {
+        method: 'POST',
+        headers: { 'x-cms-csrf': csrfToken },
+      });
+      setStatus('Erfolgreich publiziert.');
+    } catch (error) {
+      setStatus(error.message, true);
+    }
+  });
+
+  loadCollections().catch((error) => setStatus(error.message, true));
+</script>
+
+<style is:global>
+  .admin-shell {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    gap: 0.9rem;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.2rem;
+  }
+
+  .admin-head {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .admin-head h1,
+  .admin-head p {
+    margin: 0;
+  }
+
+  .admin-intro {
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .source-hint {
+    margin: 0;
+    color: var(--ink-600);
+    font-size: 0.92rem;
+  }
+
+  .cms-list {
+    display: grid;
+    gap: 0.55rem;
+  }
+
+  .add-row,
+  .admin-actions,
+  .row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .add-row input {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.55rem 0.65rem;
+    min-width: 280px;
+  }
+
+  .item-row {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: #fafafa;
+    padding: 0.55rem;
+    display: grid;
+    grid-template-columns: 2rem 56px 1fr auto;
+    gap: 0.55rem;
+    align-items: center;
+  }
+
+  .item-position {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 999px;
+    background: var(--brand-100);
+    color: var(--brand-800);
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  .item-row input {
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.55rem;
+    font-size: 0.94rem;
+  }
+
+  .preview-thumb,
+  img.preview-thumb {
+    width: 56px !important;
+    max-width: 56px !important;
+    min-width: 56px;
+    height: 56px !important;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .admin-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 999px;
+    background: var(--brand-700);
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 0.5rem 0.95rem;
+    cursor: pointer;
+  }
+
+  .admin-btn.subtle {
+    background: var(--ink-600);
+  }
+
+  .admin-btn.danger {
+    background: #b91c1c;
+  }
+
+  .admin-btn.small {
+    min-width: 2.2rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .empty-state {
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .admin-state {
+    min-height: 1.2rem;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .admin-state.error,
+  .admin-state.error * {
+    color: #b91c1c;
+    font-weight: 700;
+  }
+
+  @media (max-width: 900px) {
+    .item-row {
+      grid-template-columns: 2rem 56px 1fr;
+    }
+
+    .row-actions {
+      grid-column: 1 / -1;
+      justify-content: flex-start;
+    }
+  }
+</style>

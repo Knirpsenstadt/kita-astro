@@ -3,20 +3,26 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { getCollection, render } from 'astro:content';
 import ContentBlocks from '../components/ContentBlocks.astro';
 import { getIconPath } from '../lib/iconOptions';
+import { getCmsRuntime } from '../lib/cms/runtime';
 
-export async function getStaticPaths() {
-  const pages = await getCollection('pages');
-  return pages.map(page => ({
-    params: { slug: page.data.permalink?.replace(/^\//, '').replace(/\/$/, '') || page.id },
-    props: { page },
-  }));
+const slug = Astro.params.slug || '';
+const pages = await getCollection('pages');
+const page = pages.find((entry) => {
+  const entrySlug = entry.data.permalink?.replace(/^\//, '').replace(/\/$/, '') || entry.id.replace('/index', '');
+  return entrySlug === slug;
+});
+
+const cms = await getCmsRuntime(Astro);
+
+if (!page) {
+  Astro.response.status = 404;
 }
 
-const { page } = Astro.props;
-const { title } = page.data;
-const slug = page.data.permalink?.replace(/^\//, '').replace(/\/$/, '') || page.id;
-const { Content } = await render(page);
-const hasBody = page.body?.trim().length > 0;
+const pageTitle = page?.data.title || 'Seite nicht gefunden';
+const title = cms.text(`pages.${slug}.title`, pageTitle);
+const rendered = page ? await render(page) : null;
+const Content = rendered?.Content;
+const hasBody = (page?.body?.trim().length ?? 0) > 0;
 
 // Icon mapping for each page
 const pageIcons: Record<string, string> = {
@@ -31,16 +37,23 @@ const pageIcons: Record<string, string> = {
 const iconPath = getIconPath(pageIcons[slug], 'book-open');
 ---
 
-<BaseLayout title={title}>
-  <article class="prose max-w-none bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
-    <div class="page-title-row">
-      <div class="page-title-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d={iconPath}></path>
-        </svg>
+<BaseLayout title={title} cms={cms}>
+  {page ? (
+    <article class="prose max-w-none bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
+      <div class="page-title-row">
+        <div class="page-title-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d={iconPath}></path>
+          </svg>
+        </div>
+        <h1 class="text-2xl font-bold !mt-0 !mb-0" {...cms.attrs(`pages.${slug}.title`)}>{title}</h1>
       </div>
-      <h1 class="text-2xl font-bold !mt-0 !mb-0">{title}</h1>
-    </div>
-    {hasBody ? <Content /> : <ContentBlocks blocks={page.data.blocks} />}
-  </article>
+      {hasBody && Content ? <Content /> : <ContentBlocks blocks={page.data.blocks} cms={cms} contentKeyPrefix={`pages.${slug}.blocks`} />}
+    </article>
+  ) : (
+    <article class="prose max-w-none bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
+      <h1>Seite nicht gefunden</h1>
+      <p>Der gewuenschte Inhalt ist nicht verfuegbar.</p>
+    </article>
+  )}
 </BaseLayout>

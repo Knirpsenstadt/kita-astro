@@ -1,0 +1,699 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import { getSession } from '../../lib/cms/auth'
+import '../../styles/global.css'
+
+const session = getSession(Astro.cookies)
+
+if (!session) {
+  return Astro.redirect('/admin?next=/admin/calendar')
+}
+
+const csrfToken = session.csrf
+---
+
+<BaseLayout title="Admin - Kalender" description="Kalenderverwaltung">
+  <article class="admin-shell">
+    <div class="admin-head">
+      <h1>Kalender Eintraege</h1>
+      <div class="admin-actions">
+        <a class="admin-btn subtle" href="/admin">Zurueck</a>
+        <button type="button" id="load-live-btn" class="admin-btn subtle">Live-Daten laden</button>
+        <button type="button" id="load-baseline-btn" class="admin-btn subtle">Website-Standard laden</button>
+        <button type="button" id="save-events-btn" class="admin-btn">Entwurf speichern</button>
+        <button type="button" id="publish-btn" class="admin-btn">Publizieren</button>
+      </div>
+    </div>
+
+    <p class="admin-intro">Sortierung automatisch nach Typ und Datum. Kompakte Tabellenansicht fuer mehr Eintraege pro Bildschirm.</p>
+    <p id="source-hint" class="source-hint"></p>
+    <p id="admin-status" class="admin-state" aria-live="polite"></p>
+
+    <div class="table-toolbar">
+      <div class="toolbar-filters">
+        <div class="type-filter" role="group" aria-label="Typ Filter">
+          <button type="button" class="filter-chip" data-type-filter="all">Alle</button>
+          <button type="button" class="filter-chip" data-type-filter="event">Termin</button>
+          <button type="button" class="filter-chip" data-type-filter="closure">Schliesszeit</button>
+          <button type="button" class="filter-chip" data-type-filter="festivity">Fest</button>
+        </div>
+
+        <label class="year-filter" for="filter-year">
+          Jahr
+          <select id="filter-year">
+            <option value="all">Alle Jahre</option>
+          </select>
+        </label>
+
+        <button type="button" id="clear-filters-btn" class="admin-btn subtle small">Filter zuruecksetzen</button>
+        <span id="filter-hint" class="filter-hint"></span>
+      </div>
+
+      <button type="button" id="add-event-btn" class="admin-btn">Termin hinzufuegen</button>
+    </div>
+
+    <div id="events-list" class="cms-list"></div>
+  </article>
+</BaseLayout>
+
+<script define:vars={{ csrfToken }}>
+  const TYPE_ORDER = {
+    event: 0,
+    closure: 1,
+    festivity: 2,
+  };
+
+  const state = {
+    events: [],
+    publishedEvents: [],
+    baselineEvents: [],
+    source: 'draft',
+    filterType: 'all',
+    filterYear: 'all',
+  };
+
+  function createId(prefix) {
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  function todayYmd() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  function escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function setStatus(text, isError) {
+    const node = document.getElementById('admin-status');
+    if (!node) return;
+    node.textContent = text;
+    node.classList.toggle('error', !!isError);
+  }
+
+  function setSourceHint() {
+    const node = document.getElementById('source-hint');
+    if (!node) return;
+    const label = state.source === 'baseline' ? 'Website-Standard' : state.source === 'published' ? 'Live' : 'Entwurf';
+    node.textContent = `Aktuelle Quelle: ${label} (${state.events.length} Eintraege)`;
+  }
+
+  function setFilterHint(visibleCount) {
+    const node = document.getElementById('filter-hint');
+    if (!node) return;
+    const filtered = state.filterType !== 'all' || state.filterYear !== 'all';
+    node.textContent = filtered
+      ? `${visibleCount} von ${state.events.length} Eintraegen sichtbar`
+      : `${state.events.length} Eintraege`;
+  }
+
+  function markDraftSource() {
+    state.source = 'draft';
+    setSourceHint();
+  }
+
+  function yearFromDate(value) {
+    if (typeof value !== 'string') return '';
+    const match = value.trim().match(/^(\d{4})-\d{2}-\d{2}$/);
+    return match ? match[1] : '';
+  }
+
+  function collectYears() {
+    const years = new Set();
+    state.events.forEach((entry) => {
+      const startYear = yearFromDate(entry.start);
+      const endYear = yearFromDate(entry.end || '');
+      if (startYear) years.add(startYear);
+      if (endYear) years.add(endYear);
+    });
+    return Array.from(years).sort((a, b) => Number(a) - Number(b));
+  }
+
+  function syncYearFilterOptions() {
+    const select = document.getElementById('filter-year');
+    if (!select) return;
+
+    const years = collectYears();
+    if (state.filterYear !== 'all' && !years.includes(state.filterYear)) {
+      state.filterYear = 'all';
+    }
+
+    select.innerHTML =
+      '<option value="all">Alle Jahre</option>' +
+      years.map((year) => `<option value="${escapeHtml(year)}">${escapeHtml(year)}</option>`).join('');
+    select.value = state.filterYear;
+  }
+
+  function syncTypeFilterButtons() {
+    document.querySelectorAll('[data-type-filter]').forEach((button) => {
+      const isActive = button.dataset.typeFilter === state.filterType;
+      button.classList.toggle('active', isActive);
+    });
+  }
+
+  function compareEvents(a, b) {
+    const aType = TYPE_ORDER[a.type] ?? 99;
+    const bType = TYPE_ORDER[b.type] ?? 99;
+    if (aType !== bType) {
+      return aType - bType;
+    }
+
+    const aStart = typeof a.start === 'string' ? a.start : '';
+    const bStart = typeof b.start === 'string' ? b.start : '';
+    if (aStart !== bStart) {
+      return aStart.localeCompare(bStart);
+    }
+
+    const aEnd = typeof a.end === 'string' && a.end ? a.end : aStart;
+    const bEnd = typeof b.end === 'string' && b.end ? b.end : bStart;
+    if (aEnd !== bEnd) {
+      return aEnd.localeCompare(bEnd);
+    }
+
+    return 0;
+  }
+
+  function sortEvents(items) {
+    return [...items].sort(compareEvents);
+  }
+
+  function matchesFilters(entry) {
+    if (state.filterType !== 'all' && entry.type !== state.filterType) {
+      return false;
+    }
+
+    if (state.filterYear !== 'all') {
+      const startYear = yearFromDate(entry.start);
+      const endYear = yearFromDate(entry.end || '');
+      if (startYear !== state.filterYear && endYear !== state.filterYear) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  function getVisibleEntries() {
+    return state.events
+      .map((entry, index) => ({ entry, index }))
+      .sort((a, b) => compareEvents(a.entry, b.entry))
+      .filter((item) => matchesFilters(item.entry));
+  }
+
+  async function api(url, options) {
+    const response = await fetch(url, options);
+    const result = await response.json().catch(() => ({ error: 'Unerwartete Antwort.' }));
+    if (!response.ok) {
+      throw new Error(result.error || 'Anfrage fehlgeschlagen.');
+    }
+    return result;
+  }
+
+  function bindEventRow(container, index) {
+    const entry = state.events[index];
+    if (!entry) return;
+
+    container.querySelector('[data-field="label"]')?.addEventListener('input', (event) => {
+      entry.label = event.currentTarget.value;
+      markDraftSource();
+    });
+
+    container.querySelector('[data-field="start"]')?.addEventListener('change', (event) => {
+      entry.start = event.currentTarget.value;
+      markDraftSource();
+      renderEvents();
+    });
+
+    container.querySelector('[data-field="end"]')?.addEventListener('change', (event) => {
+      entry.end = event.currentTarget.value;
+      markDraftSource();
+      renderEvents();
+    });
+
+    container.querySelectorAll('[data-set-type]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const type = button.dataset.setType || 'event';
+        if (entry.type === type) return;
+        entry.type = type;
+        markDraftSource();
+        renderEvents();
+      });
+    });
+
+    container.querySelector('[data-action="remove"]')?.addEventListener('click', () => {
+      const label = (entry.label || 'diesen Termin').trim();
+      if (!window.confirm(`Termin "${label}" wirklich loeschen?`)) return;
+      state.events.splice(index, 1);
+      markDraftSource();
+      renderEvents();
+    });
+  }
+
+  function renderEvents() {
+    const list = document.getElementById('events-list');
+    if (!list) return;
+
+    syncYearFilterOptions();
+    syncTypeFilterButtons();
+
+    const visibleEntries = getVisibleEntries();
+    setFilterHint(visibleEntries.length);
+    list.innerHTML = '';
+
+    if (state.events.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'empty-state';
+      empty.textContent = 'Keine Kalender-Eintraege im Entwurf.';
+      list.appendChild(empty);
+      return;
+    }
+
+    if (visibleEntries.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'empty-state';
+      empty.textContent = 'Keine Eintraege fuer den aktuellen Filter.';
+      list.appendChild(empty);
+      return;
+    }
+
+    visibleEntries.forEach(({ entry, index }) => {
+      const row = document.createElement('div');
+      row.className = `event-row type-${escapeHtml(entry.type || 'event')}`;
+      row.innerHTML =
+        '<input class="field-label" data-field="label" type="text" aria-label="Bezeichnung" value="' + escapeHtml(entry.label) + '" placeholder="Bezeichnung" />' +
+        '<div class="type-toggle" role="group" aria-label="Typ auswaehlen">' +
+          '<button type="button" class="type-pill event' + (entry.type === 'event' ? ' active' : '') + '" data-set-type="event">Termin</button>' +
+          '<button type="button" class="type-pill closure' + (entry.type === 'closure' ? ' active' : '') + '" data-set-type="closure">Schliesszeit</button>' +
+          '<button type="button" class="type-pill festivity' + (entry.type === 'festivity' ? ' active' : '') + '" data-set-type="festivity">Fest</button>' +
+        '</div>' +
+        '<input class="field-start" data-field="start" type="date" aria-label="Start" value="' + escapeHtml(entry.start) + '" />' +
+        '<input class="field-end" data-field="end" type="date" aria-label="Ende optional" value="' + escapeHtml(entry.end || '') + '" />' +
+        '<div class="row-actions">' +
+          '<button type="button" class="admin-btn danger tiny" data-action="remove" title="Entfernen">Entfernen</button>' +
+        '</div>';
+
+      list.appendChild(row);
+      bindEventRow(row, index);
+    });
+  }
+
+  async function loadCollections() {
+    const result = await api('/api/admin/collections');
+    const draftEvents = Array.isArray(result?.draftData?.events) ? result.draftData.events : [];
+    const publishedEvents = Array.isArray(result?.publishedData?.events) ? result.publishedData.events : [];
+    const baselineEvents = Array.isArray(result?.baselineData?.events) ? result.baselineData.events : [];
+
+    state.publishedEvents = sortEvents(publishedEvents.map((item) => ({ ...item })));
+    state.baselineEvents = sortEvents(baselineEvents.map((item) => ({ ...item })));
+
+    const shouldPreferBaseline = draftEvents.length <= 1 && publishedEvents.length <= 1 && baselineEvents.length > 1;
+    state.events = sortEvents((shouldPreferBaseline ? baselineEvents : draftEvents).map((item) => ({ ...item })));
+    state.source = shouldPreferBaseline ? 'baseline' : 'draft';
+    setSourceHint();
+    renderEvents();
+  }
+
+  async function saveEvents() {
+    state.events = sortEvents(state.events);
+    await api('/api/admin/collections', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-cms-csrf': csrfToken,
+      },
+      body: JSON.stringify({ events: state.events }),
+    });
+  }
+
+  document.getElementById('add-event-btn')?.addEventListener('click', () => {
+    state.events.push({ id: createId('event'), label: '', type: 'event', start: todayYmd(), end: '' });
+    state.filterType = 'all';
+    state.filterYear = 'all';
+    markDraftSource();
+    renderEvents();
+  });
+
+  document.querySelectorAll('[data-type-filter]').forEach((button) => {
+    button.addEventListener('click', () => {
+      state.filterType = button.dataset.typeFilter || 'all';
+      renderEvents();
+    });
+  });
+
+  document.getElementById('filter-year')?.addEventListener('change', (event) => {
+    state.filterYear = event.currentTarget.value || 'all';
+    renderEvents();
+  });
+
+  document.getElementById('clear-filters-btn')?.addEventListener('click', () => {
+    state.filterType = 'all';
+    state.filterYear = 'all';
+    renderEvents();
+  });
+
+  document.getElementById('load-live-btn')?.addEventListener('click', () => {
+    if (state.publishedEvents.length === 0) {
+      setStatus('Keine Live-Termine gefunden.');
+      return;
+    }
+    if (!window.confirm('Entwurf mit Live-Daten ersetzen? Nicht gespeicherte Aenderungen gehen verloren.')) return;
+    state.events = sortEvents(state.publishedEvents.map((item) => ({ ...item })));
+    state.source = 'published';
+    setSourceHint();
+    renderEvents();
+    setStatus('Live-Daten geladen. Jetzt speichern, wenn du sie behalten willst.');
+  });
+
+  document.getElementById('load-baseline-btn')?.addEventListener('click', () => {
+    if (state.baselineEvents.length === 0) {
+      setStatus('Keine Website-Standarddaten gefunden.');
+      return;
+    }
+    if (!window.confirm('Entwurf mit Website-Standard ersetzen? Nicht gespeicherte Aenderungen gehen verloren.')) return;
+    state.events = sortEvents(state.baselineEvents.map((item) => ({ ...item })));
+    state.source = 'baseline';
+    setSourceHint();
+    renderEvents();
+    setStatus('Website-Standard geladen. Jetzt speichern, wenn du ihn behalten willst.');
+  });
+
+  document.getElementById('save-events-btn')?.addEventListener('click', async () => {
+    try {
+      setStatus('Speichere Entwurf ...');
+      await saveEvents();
+      setStatus('Entwurf gespeichert.');
+      renderEvents();
+    } catch (error) {
+      setStatus(error.message, true);
+    }
+  });
+
+  document.getElementById('publish-btn')?.addEventListener('click', async () => {
+    try {
+      setStatus('Publiziere Entwurf ...');
+      await api('/api/admin/publish', {
+        method: 'POST',
+        headers: { 'x-cms-csrf': csrfToken },
+      });
+      setStatus('Erfolgreich publiziert.');
+    } catch (error) {
+      setStatus(error.message, true);
+    }
+  });
+
+  loadCollections().catch((error) => setStatus(error.message, true));
+</script>
+
+<style is:global>
+  .admin-shell {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    gap: 0.8rem;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+  }
+
+  .admin-head {
+    display: grid;
+    gap: 0.45rem;
+  }
+
+  .admin-head h1,
+  .admin-head p {
+    margin: 0;
+  }
+
+  .admin-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .admin-intro {
+    color: var(--muted);
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  .source-hint {
+    margin: 0;
+    color: var(--ink-600);
+    font-size: 0.84rem;
+  }
+
+  .table-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: #fafafa;
+    padding: 0.5rem;
+  }
+
+  .toolbar-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.45rem;
+  }
+
+  .type-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .filter-chip {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--ink-700);
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.32rem 0.58rem;
+    cursor: pointer;
+  }
+
+  .filter-chip.active {
+    border-color: var(--ink-600);
+    background: var(--ink-600);
+    color: #fff;
+  }
+
+  .year-filter {
+    display: grid;
+    gap: 0.18rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--ink-600);
+  }
+
+  .year-filter select {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.33rem 0.5rem;
+    font-size: 0.84rem;
+    min-width: 130px;
+    background: #fff;
+  }
+
+  .filter-hint {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-weight: 700;
+    padding: 0 0.2rem;
+  }
+
+  .cms-list {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .event-row {
+    border: 1px solid var(--border);
+    border-left-width: 5px;
+    border-radius: var(--radius-sm);
+    background: #fff;
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) auto 126px 126px auto;
+    grid-template-areas: 'label type start end actions';
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.42rem;
+  }
+
+  .event-row.type-event {
+    border-left-color: #3b82f6;
+  }
+
+  .event-row.type-closure {
+    border-left-color: #ef4444;
+  }
+
+  .event-row.type-festivity {
+    border-left-color: #22c55e;
+  }
+
+  .field-label,
+  .field-start,
+  .field-end {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.38rem 0.52rem;
+    font-size: 0.85rem;
+    min-height: 2rem;
+  }
+
+  .field-label {
+    grid-area: label;
+  }
+
+  .type-toggle {
+    grid-area: type;
+    display: flex;
+    align-items: center;
+    gap: 0.28rem;
+    flex-wrap: wrap;
+  }
+
+  .type-pill {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--ink-700);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.28rem 0.54rem;
+    cursor: pointer;
+  }
+
+  .type-pill.event.active {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #93c5fd;
+  }
+
+  .type-pill.closure.active {
+    background: #fef2f2;
+    color: #b91c1c;
+    border-color: #fca5a5;
+  }
+
+  .type-pill.festivity.active {
+    background: #f0fdf4;
+    color: #166534;
+    border-color: #86efac;
+  }
+
+  .field-start {
+    grid-area: start;
+  }
+
+  .field-end {
+    grid-area: end;
+  }
+
+  .row-actions {
+    grid-area: actions;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .empty-state {
+    color: var(--muted);
+    margin: 0;
+    padding: 0.8rem 0.2rem;
+  }
+
+  .admin-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 999px;
+    background: var(--brand-700);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.86rem;
+    text-decoration: none;
+    padding: 0.4rem 0.76rem;
+    cursor: pointer;
+  }
+
+  .admin-btn.subtle {
+    background: var(--ink-600);
+  }
+
+  .admin-btn.danger {
+    background: #b91c1c;
+  }
+
+  .admin-btn.small {
+    padding: 0.34rem 0.6rem;
+  }
+
+  .admin-btn.tiny {
+    min-width: 2rem;
+    padding: 0.34rem 0.56rem;
+    font-size: 0.78rem;
+  }
+
+  .admin-state {
+    min-height: 1.2rem;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .admin-state.error,
+  .admin-state.error * {
+    color: #b91c1c;
+    font-weight: 700;
+  }
+
+  @media (max-width: 980px) {
+    .table-toolbar {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .event-row {
+      grid-template-columns: minmax(150px, 1fr) 1fr auto;
+      grid-template-areas:
+        'label label actions'
+        'type start actions'
+        'type end actions';
+      align-items: start;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .event-row {
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        'label'
+        'type'
+        'start'
+        'end'
+        'actions';
+    }
+
+    .row-actions {
+      justify-content: flex-start;
+    }
+  }
+</style>

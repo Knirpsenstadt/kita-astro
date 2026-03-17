@@ -1,0 +1,17 @@
+export const DEFAULT_CAROUSEL_IMAGES = [
+  '/img/slider/01_draussen.jpg',
+  '/img/slider/02_draussen.jpg',
+  '/img/slider/03_draussen.jpg',
+  '/img/slider/04_draussen.jpg',
+  '/img/slider/05_draussen.jpg',
+  '/img/slider/06_draussen.jpg',
+  '/img/slider/07_draussen.jpg',
+  '/img/slider/08_bad.jpg',
+  '/img/slider/09_baum.jpg',
+  '/img/slider/10_fenstbrett.jpg',
+  '/img/slider/11_flur.jpg',
+  '/img/slider/12_flur.jpg',
+  '/img/slider/13_flur.jpg',
+  '/img/slider/14_gruppenraum.jpg',
+  '/img/slider/15_gruppenraum.jpg',
+]

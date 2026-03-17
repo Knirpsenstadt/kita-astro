@@ -1,29 +1,24 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getCollection } from 'astro:content';
 import eventsListScript from '../scripts/events-list.js?raw';
-import { toYMD } from '../utils/date';
+import { getBaselineEvents } from '../lib/cms/events';
+import { getCmsRuntime } from '../lib/cms/runtime';
 
-const events = await getCollection('events');
-const eventsData = events.map(e => ({
-  label: e.data.label,
-  type: e.data.type,
-  start: toYMD(e.data.start),
-  end: toYMD(e.data.end || e.data.start)
-}));
+const cms = await getCmsRuntime(Astro);
+const eventsData = cms.events(getBaselineEvents());
 ---
 
-<BaseLayout title="Kalender">
+<BaseLayout title={cms.text('calendar.pageTitle', 'Kalender')} cms={cms}>
   <article class="prose max-w-none bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
     <div class="page-title-row">
       <div class="page-title-icon">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>
       </div>
-      <h1 class="text-2xl font-bold !mt-0 !mb-0">Kalender</h1>
+      <h1 class="text-2xl font-bold !mt-0 !mb-0" {...cms.attrs('calendar.pageTitle')}>{cms.text('calendar.pageTitle', 'Kalender')}</h1>
     </div>
-    
+
     <div class="highlight-box" style="margin-top: 1.5rem;">
-      Termine, Feste und Schließzeiten im Überblick
+      <span {...cms.attrs('calendar.pageIntro')}>{cms.text('calendar.pageIntro', 'Termine, Feste und Schliesszeiten im Ueberblick')}</span>
     </div>
     
     <div id="events-list" data-events-list style="margin-top: 1.5rem;">

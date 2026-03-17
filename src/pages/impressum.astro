@@ -3,14 +3,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { getCollection, render } from 'astro:content';
 import ContentBlocks from '../components/ContentBlocks.astro';
 import { getIconPath } from '../lib/iconOptions';
+import { getCmsRuntime } from '../lib/cms/runtime';
 
 const pages = await getCollection('pages');
 const impressumPage = pages.find(p => p.id === 'impressum/index' || p.id === 'impressum');
 const { Content } = impressumPage ? await render(impressumPage) : { Content: null };
 const hasBody = impressumPage?.body?.trim().length ? true : false;
+const cms = await getCmsRuntime(Astro);
+const title = cms.text('pages.impressum.title', 'Kontakt & Impressum');
 ---
 
-<BaseLayout title="Kontakt & Impressum">
+<BaseLayout title={title} cms={cms}>
   {impressumPage ? (
     <article class="prose max-w-none bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
       <div class="page-title-row">
@@ -19,9 +22,9 @@ const hasBody = impressumPage?.body?.trim().length ? true : false;
             <path stroke-linecap="round" stroke-linejoin="round" d={getIconPath('info')} />
           </svg>
         </div>
-        <h1 class="text-2xl font-bold !mt-0 !mb-0">Kontakt & Impressum</h1>
+        <h1 class="text-2xl font-bold !mt-0 !mb-0" {...cms.attrs('pages.impressum.title')}>{title}</h1>
       </div>
-      {hasBody && Content ? <Content /> : <ContentBlocks blocks={impressumPage.data.blocks} />}
+      {hasBody && Content ? <Content /> : <ContentBlocks blocks={impressumPage.data.blocks} cms={cms} contentKeyPrefix="pages.impressum.blocks" />}
     </article>
   ) : (
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">

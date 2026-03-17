@@ -12,16 +12,6 @@ const pages = defineCollection({
   }),
 });
 
-const events = defineCollection({
-  loader: glob({ pattern: '**/*.{md,mdoc}', base: './src/content/events' }),
-  schema: z.object({
-    label: z.string(),
-    type: z.enum(['event', 'closure', 'festivity']).default('event'),
-    start: z.coerce.string(),
-    end: z.coerce.string().optional(),
-  }),
-});
-
 const sponsors = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdoc}', base: './src/content/sponsors' }),
   schema: z.object({
@@ -40,4 +30,4 @@ const home = defineCollection({
   }),
 });
 
-export const collections = { pages, events, sponsors, home };
+export const collections = { pages, sponsors, home };
