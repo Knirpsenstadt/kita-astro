@@ -402,7 +402,7 @@ const csrfToken = session.csrf
       setStatus('Publiziere Entwurf ...');
       await api('/api/admin/publish', {
         method: 'POST',
-        headers: { 'x-cms-csrf': csrfToken },
+        headers: { 'Content-Type': 'application/json', 'x-cms-csrf': csrfToken },
       });
       setStatus('Erfolgreich publiziert.');
     } catch (error) {

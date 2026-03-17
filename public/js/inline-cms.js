@@ -44,7 +44,7 @@
   async function publishDraft() {
     const result = await api('/api/admin/publish', {
       method: 'POST',
-      headers: { 'x-cms-csrf': state.csrfToken || '' },
+      headers: { 'Content-Type': 'application/json', 'x-cms-csrf': state.csrfToken || '' },
     });
     return result;
   }
@@ -207,7 +207,7 @@
     });
 
     document.getElementById('cms-logout')?.addEventListener('click', async function () {
-      await fetch('/api/admin/logout', { method: 'POST' });
+      await fetch('/api/admin/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
       window.location.reload();
     });
   }

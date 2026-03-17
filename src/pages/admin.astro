@@ -74,7 +74,7 @@ const csrfToken = session?.csrf || ''
 
   if (isAuthenticated) {
     document.getElementById('logout-btn')?.addEventListener('click', async () => {
-      await fetch('/api/admin/logout', { method: 'POST' });
+      await fetch('/api/admin/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
       window.location.reload();
     });
 
@@ -83,7 +83,7 @@ const csrfToken = session?.csrf || ''
         setStatus('Publiziere Entwurf ...');
         await api('/api/admin/publish', {
           method: 'POST',
-          headers: { 'x-cms-csrf': csrfToken },
+          headers: { 'Content-Type': 'application/json', 'x-cms-csrf': csrfToken },
         });
         setStatus('Erfolgreich publiziert.');
       } catch (error) {
