@@ -29,7 +29,9 @@
     "home.quickFacts.2": "Eltern-App für Kommunikation",
     "home.quickFacts.0": "Direkt am S-Bhf Röntgental",
     "home.intro.text": "52 Kinder erleben in drei altersgemischten Gruppen einen harmonisch gestalteten Tagesablauf in familiärer Atmosphäre.",
-    "home.highlights.3.text": "Wenig Fluktuation - verlässliche Bezugspersonen ueber viele Jahre"
+    "home.highlights.3.text": "Wenig Fluktuation - verlässliche Bezugspersonen ueber viele Jahre",
+    "home.highlights.1.text": "Täglich frisch gekocht - mit saisonalen Bioprodukten",
+    "home.highlights.4.text": "Seit über 30 Jahren von Eltern geführt - aktive Mitgestaltung erwünscht"
   },
   "draftData": {
     "sponsors": [],
@@ -41,6 +43,6 @@
     "carouselImages": [],
     "events": []
   },
-  "updatedAt": "2026-03-18T13:56:40.611Z",
-  "publishedAt": "2026-03-18T13:55:55.024Z"
+  "updatedAt": "2026-03-18T13:56:44.993Z",
+  "publishedAt": "2026-03-18T13:56:44.993Z"
 }
