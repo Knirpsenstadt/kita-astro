@@ -22,7 +22,12 @@
     "sponsors.ctaHeading": "Sie möchten Sponsor werden?",
     "sponsors.pageIntro": "Wir danken unseren Sponsoren und Großspendern herzlich fuer ihre großzügige Unterstützung! Durch ihr Engagement können wir unsere Kita und die Angebote fuer unsere Kinder stetig verbessern.",
     "sponsors.pageTitle": "Sponsoren & Großspender",
-    "pages.vereinsleben.blocks.9.bodyText": "Das Kita-Leben aktiv mitgestalten - ob im Vorstand, bei Arbeitseinsätzen oder bei der Planung von Festen. Bei uns sind Eltern keine Zaungäste, sondern Teil der Gemeinschaft!"
+    "pages.vereinsleben.blocks.9.bodyText": "Das Kita-Leben aktiv mitgestalten - ob im Vorstand, bei Arbeitseinsätzen oder bei der Planung von Festen. Bei uns sind Eltern keine Zaungäste, sondern Teil der Gemeinschaft!",
+    "home.quickFacts.1": "Nur 2 Wochen Sommerschließzeit",
+    "home.quickFacts.2": "Eltern-App für Kommunikation",
+    "home.quickFacts.0": "Direkt am S-Bhf Röntgental",
+    "home.intro.text": "52 Kinder erleben in drei altersgemischten Gruppen einen harmonisch gestalteten Tagesablauf in familiärer Atmosphäre.",
+    "home.highlights.3.text": "Wenig Fluktuation - verlässliche Bezugspersonen ueber viele Jahre"
   },
   "draftData": {
     "sponsors": [],
@@ -34,6 +39,6 @@
     "carouselImages": [],
     "events": []
   },
-  "updatedAt": "2026-03-18T13:55:23.183Z",
-  "publishedAt": "2026-03-17T14:16:07.675Z"
+  "updatedAt": "2026-03-18T13:55:37.317Z",
+  "publishedAt": "2026-03-18T13:55:37.317Z"
 }
