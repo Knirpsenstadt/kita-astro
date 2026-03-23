@@ -50,7 +50,7 @@ const navItems = [
     {cms.isAdmin && <script src="/js/inline-cms.js" defer></script>}
   </head>
   <body class="min-h-screen pb-20">
-    <header class="navbar bg-[#DAEFB4] shadow-sm sticky top-0 z-50 px-4 lg:px-6 border-b border-[#c9e8a0]" transition:persist="site-header" transition:animate="none">
+    <header class="navbar bg-[#DAEFB4] shadow-sm sticky top-0 z-50 px-4 lg:px-6 border-b border-[#c9e8a0]" transition:persist="site-header">
       <div class="navbar-start">
         <a href="/" class="btn btn-ghost text-xl normal-case gap-2 hover:bg-[#cde6a0]">
           <img src="/img/logo.jpg" alt="Kita Knirpsenstadt" class="h-12 w-12 rounded-full border-2 border-white shadow-sm" />
@@ -95,7 +95,7 @@ const navItems = [
       <slot />
     </main>
 
-    <footer class="fixed bottom-0 left-0 right-0 bg-[#DAEFB4] py-4 text-center z-40 border-t border-[#c9e8a0]" transition:persist="site-footer" transition:animate="none">
+    <footer class="fixed bottom-0 left-0 right-0 bg-[#DAEFB4] py-4 text-center z-40 border-t border-[#c9e8a0]" transition:persist="site-footer">
       <p class="text-base mb-0 text-[#3d6b2a] font-semibold">Elternverein Knirpsenstadt e.V.</p>
       <a href="/impressum" class="hover:underline font-medium text-base text-[#4a7a3a]">Kontakt &amp; Impressum</a>
       <a href="/admin" class="admin-link" title="CMS Login">
