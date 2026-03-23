@@ -106,6 +106,13 @@ const navItems = [
 </html>
 
 <style is:global>
+  /* Disable default view transition animations for instant swap */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
   :root {
     /* Green palette - refined */
     --brand-50: #f5fbe9;
