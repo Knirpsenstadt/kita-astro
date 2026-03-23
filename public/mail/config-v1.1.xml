@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<clientConfig version="1.1">
+  <emailProvider id="knirpsenstadt.de">
+    <domain>knirpsenstadt.de</domain>
+    <displayName>Knirpsenstadt E-Mail</displayName>
+    <displayShortName>Knirpsenstadt</displayShortName>
+    <incomingServer type="imap">
+      <hostname>mail.your-server.de</hostname>
+      <port>993</port>
+      <socketType>SSL</socketType>
+      <authentication>password-cleartext</authentication>
+      <username>%EMAILADDRESS%</username>
+    </incomingServer>
+    <outgoingServer type="smtp">
+      <hostname>mail.your-server.de</hostname>
+      <port>465</port>
+      <socketType>SSL</socketType>
+      <authentication>password-cleartext</authentication>
+      <username>%EMAILADDRESS%</username>
+    </outgoingServer>
+  </emailProvider>
+</clientConfig>
