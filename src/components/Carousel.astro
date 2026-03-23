@@ -19,10 +19,10 @@ const sliderImages = images.length ? images : DEFAULT_CAROUSEL_IMAGES;
   </div>
   <div class="slider-controls" aria-label="Bildnavigation">
     <button type="button" class="slider-arrow" data-controls="prev" aria-label="Vorheriges Bild">
-      <i class="fas fa-chevron-left" aria-hidden="true"></i>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
     </button>
     <button type="button" class="slider-arrow" data-controls="next" aria-label="Nächstes Bild">
-      <i class="fas fa-chevron-right" aria-hidden="true"></i>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
     </button>
   </div>
   <div class="slider-dots" aria-label="Bildauswahl"></div>
@@ -113,7 +113,7 @@ const sliderImages = images.length ? images : DEFAULT_CAROUSEL_IMAGES;
 
 <script>
   // Simple vanilla JS slider
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('astro:page-load', () => {
     document.querySelectorAll('.slider-wrap').forEach((wrapper) => {
       const slider = wrapper.querySelector('.my-slider');
       if (!slider) return;

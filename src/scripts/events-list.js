@@ -132,9 +132,5 @@
     document.querySelectorAll('[data-events-list]').forEach(buildEventsList);
   }
   
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  document.addEventListener('astro:page-load', init);
 })();
