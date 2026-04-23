@@ -126,6 +126,7 @@ const eventsData = cms.events(getBaselineEvents());
   
   .event-content {
     flex: 1;
+    min-width: 0;
   }
   
   .event-title {
@@ -140,12 +141,18 @@ const eventsData = cms.events(getBaselineEvents());
   }
   
   .event-type {
+    flex-shrink: 0;
     padding: 0.25rem 0.75rem;
     border-radius: 999px;
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.025em;
+  }
+
+  .event-title,
+  .event-duration {
+    overflow-wrap: anywhere;
   }
   
   .event-type.closure {
@@ -174,5 +181,45 @@ const eventsData = cms.events(getBaselineEvents());
     height: 48px;
     margin-bottom: 1rem;
     opacity: 0.4;
+  }
+
+  @media (max-width: 640px) {
+    #events-list {
+      padding: 1rem;
+    }
+
+    .event-item {
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .event-date {
+      min-width: 64px;
+      padding: 0.65rem;
+    }
+
+    .event-content {
+      flex-basis: calc(100% - 80px);
+    }
+
+    .event-type {
+      margin-left: 80px;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .event-item {
+      gap: 0.85rem;
+    }
+
+    .event-content,
+    .event-type {
+      flex-basis: 100%;
+      margin-left: 0;
+    }
+
+    .event-type {
+      justify-self: flex-start;
+    }
   }
 </style>

@@ -49,7 +49,7 @@ const navItems = [
     <title>{title} | Kita Knirpsenstadt</title>
     {cms.isAdmin && <script src="/js/inline-cms.js" defer></script>}
   </head>
-  <body class="min-h-screen pb-20">
+  <body class="min-h-screen pb-0 sm:pb-20">
     <header class="navbar bg-[#DAEFB4] shadow-sm sticky top-0 z-50 px-4 lg:px-6 border-b border-[#c9e8a0]" transition:persist="site-header">
       <div class="navbar-start">
         <a href="/" class="btn btn-ghost text-xl normal-case gap-2 hover:bg-[#cde6a0]">
@@ -95,7 +95,7 @@ const navItems = [
       <slot />
     </main>
 
-    <footer class="fixed bottom-0 left-0 right-0 bg-[#DAEFB4] py-4 text-center z-40 border-t border-[#c9e8a0]" transition:persist="site-footer">
+    <footer class="bg-[#DAEFB4] py-4 text-center z-40 border-t border-[#c9e8a0] sm:fixed sm:bottom-0 sm:left-0 sm:right-0" transition:persist="site-footer">
       <p class="text-base mb-0 text-[#3d6b2a] font-semibold">Elternverein Knirpsenstadt e.V.</p>
       <a href="/impressum" class="hover:underline font-medium text-base text-[#4a7a3a]">Kontakt &amp; Impressum</a>
       <a href="/admin" class="admin-link" title="CMS Login">
@@ -196,15 +196,22 @@ const navItems = [
   /* Feature grid for content pages */
   .feature-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: 1fr;
     gap: 1rem;
     margin: 1.5rem 0;
+  }
+
+  @media (min-width: 640px) {
+    .feature-grid {
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
   }
   
   .feature-card {
     display: flex;
     align-items: flex-start;
     gap: 1rem;
+    min-width: 0;
     padding: 1.25rem;
     background: var(--brand-50);
     border: 1px solid var(--brand-100);
@@ -240,6 +247,7 @@ const navItems = [
     font-size: 1rem;
     font-weight: 700;
     color: var(--ink-700);
+    overflow-wrap: anywhere;
   }
   
   .feature-content p {
@@ -247,6 +255,7 @@ const navItems = [
     font-size: 0.9rem;
     color: var(--muted);
     line-height: 1.5;
+    overflow-wrap: anywhere;
   }
   
   /* Admin link in footer */
@@ -278,6 +287,7 @@ const navItems = [
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    flex-wrap: wrap;
     margin-bottom: 1.5rem;
   }
   
@@ -415,9 +425,15 @@ const navItems = [
   /* Education areas grid - fixed 3 columns for 6 items */
   .edu-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     gap: 0.75rem;
     margin: 1rem 0;
+  }
+
+  @media (min-width: 480px) {
+    .edu-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
   
   @media (min-width: 640px) {
@@ -430,6 +446,7 @@ const navItems = [
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    min-width: 0;
     padding: 0.85rem 1rem;
     background: white;
     border: 1px solid var(--border);
@@ -454,6 +471,7 @@ const navItems = [
     color: var(--ink-700);
     font-size: 0.9rem;
     line-height: 1.3;
+    overflow-wrap: anywhere;
   }
   
   /* Intro card styling for homepage */
@@ -462,6 +480,12 @@ const navItems = [
     align-items: flex-start;
     gap: 1rem;
     margin-bottom: 1rem;
+  }
+
+  @media (max-width: 480px) {
+    .intro-header {
+      flex-direction: column;
+    }
   }
   
   .intro-icon {
@@ -560,15 +584,22 @@ const navItems = [
   /* Document cards */
   .doc-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: 1fr;
     gap: 1rem;
     margin: 1rem 0 2rem 0;
+  }
+
+  @media (min-width: 640px) {
+    .doc-grid {
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
   }
   
   .doc-card {
     display: flex;
     align-items: flex-start;
     gap: 1rem;
+    min-width: 0;
     padding: 1.25rem;
     background: white;
     border: 1px solid var(--border);
@@ -606,6 +637,7 @@ const navItems = [
     font-size: 1rem;
     font-weight: 700;
     color: var(--ink-700);
+    overflow-wrap: anywhere;
   }
   
   .doc-content p {
@@ -613,6 +645,15 @@ const navItems = [
     font-size: 0.85rem;
     color: var(--muted);
     line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 480px) {
+    .highlight-box,
+    .info-box,
+    .column-card {
+      padding: 1rem 1.1rem;
+    }
   }
   
   .doc-badge {

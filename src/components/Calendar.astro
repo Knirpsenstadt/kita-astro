@@ -417,4 +417,21 @@ const { events } = Astro.props;
     width: 16px;
     height: 16px;
   }
+
+  @media (max-width: 480px) {
+    #closures-calendar {
+      padding: 12px;
+    }
+
+    #closures-calendar .cal-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    #closures-calendar .cal-nav-group {
+      width: 100%;
+      justify-content: space-between;
+    }
+  }
 </style>
