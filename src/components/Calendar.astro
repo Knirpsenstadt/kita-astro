@@ -62,11 +62,16 @@ const { events } = Astro.props;
   function inRange(d, r){ return d >= r.start && d <= r.end; }
 
   function buildCalendar(container){
+    if (!(container instanceof HTMLElement) || container.dataset.calendarInitialized === 'true') {
+      return;
+    }
+
     const dataEl = qs('[data-events]', container);
     let closures = [];
     if(dataEl){
       try { closures = JSON.parse(dataEl.textContent || '{}'); } catch(err){}
     }
+    container.dataset.calendarInitialized = 'true';
     const ranges = parseRanges(closures);
 
     let today = new Date();
@@ -93,7 +98,14 @@ const { events } = Astro.props;
 
     const grid = document.createElement('div'); grid.className='cal-grid';
     const legend = document.createElement('div'); legend.className='cal-legend';
-    legend.innerHTML = '<span class="badge closed"></span>Schließzeit <span class="badge parent"></span>Elterntermin <span class="badge family"></span>Familienveranstaltung <span class="badge child"></span>Kinderaktion';
+    legend.innerHTML = [
+      ['closed', 'Schließzeit'],
+      ['parent', 'Elterntermin'],
+      ['family', 'Familienveranstaltung'],
+      ['child', 'Kinderaktion'],
+    ].map(([type, label]) =>
+      `<span class="legend-item"><span class="badge ${type}"></span><span>${label}</span></span>`
+    ).join('');
 
     const detailsEl = document.createElement('div');
     detailsEl.classList.add('cal-details');
@@ -195,9 +207,17 @@ const { events } = Astro.props;
     render();
   }
 
-  document.addEventListener('astro:page-load', () => {
+  function initCalendars() {
     document.querySelectorAll('[data-calendar]').forEach(buildCalendar);
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCalendars, { once: true });
+  } else {
+    initCalendars();
+  }
+
+  document.addEventListener('astro:page-load', initCalendars);
 </script>
 
 <style is:global>
@@ -323,6 +343,13 @@ const { events } = Astro.props;
     align-items: center;
     gap: 6px;
     flex-wrap: wrap;
+  }
+
+  #closures-calendar .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
   }
 
   #closures-calendar .badge.closed,

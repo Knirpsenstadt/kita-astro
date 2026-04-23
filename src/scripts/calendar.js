@@ -78,7 +78,14 @@
 
     const grid = document.createElement('div'); grid.className='cal-grid';
   const legend = document.createElement('div'); legend.className='cal-legend';
-  legend.innerHTML = '<span class="badge closed"></span>Schließzeit <span class="badge parent"></span>Elterntermin <span class="badge family"></span>Familienveranstaltung <span class="badge child"></span>Kinderaktion';
+  legend.innerHTML = [
+    ['closed', 'Schließzeit'],
+    ['parent', 'Elterntermin'],
+    ['family', 'Familienveranstaltung'],
+    ['child', 'Kinderaktion'],
+  ].map(([type, label]) =>
+    `<span class="legend-item"><span class="badge ${type}"></span><span>${label}</span></span>`
+  ).join('');
 
     container.innerHTML='';
     container.append(header, grid, legend);

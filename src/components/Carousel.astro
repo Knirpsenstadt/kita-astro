@@ -112,87 +112,101 @@ const sliderImages = images.length ? images : DEFAULT_CAROUSEL_IMAGES;
 </style>
 
 <script>
-  // Simple vanilla JS slider
-  document.addEventListener('astro:page-load', () => {
-    document.querySelectorAll('.slider-wrap').forEach((wrapper) => {
-      const slider = wrapper.querySelector('.my-slider');
-      if (!slider) return;
+  function buildSlider(wrapper: Element) {
+    if (!(wrapper instanceof HTMLElement) || wrapper.dataset.sliderInitialized === 'true') {
+      return;
+    }
 
-      const slides = slider.children;
-      const totalSlides = slides.length;
-      let currentSlide = 0;
-      let autoplayInterval: ReturnType<typeof setInterval>;
+    const slider = wrapper.querySelector('.my-slider');
+    if (!(slider instanceof HTMLElement)) return;
 
-      const dotsContainer = wrapper.querySelector('.slider-dots');
-      const dots: HTMLButtonElement[] = [];
-      if (dotsContainer) {
-        for (let i = 0; i < totalSlides; i++) {
-          const dot = document.createElement('button');
-          dot.type = 'button';
-          dot.className = 'slider-dot';
-          dot.setAttribute('aria-label', `Zu Bild ${i + 1}`);
-          dotsContainer.appendChild(dot);
-          dots.push(dot);
-        }
+    wrapper.dataset.sliderInitialized = 'true';
+
+    const slides = slider.children;
+    const totalSlides = slides.length;
+    let currentSlide = 0;
+    let autoplayInterval: ReturnType<typeof setInterval>;
+
+    const dotsContainer = wrapper.querySelector('.slider-dots');
+    const dots: HTMLButtonElement[] = [];
+    if (dotsContainer instanceof HTMLElement) {
+      dotsContainer.innerHTML = '';
+      for (let i = 0; i < totalSlides; i++) {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'slider-dot';
+        dot.setAttribute('aria-label', `Zu Bild ${i + 1}`);
+        dotsContainer.appendChild(dot);
+        dots.push(dot);
       }
+    }
 
-      function updateDots(index: number) {
-        dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
-      }
+    function updateDots(index: number) {
+      dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
+    }
 
-      function showSlide(index: number) {
-        Array.from(slides).forEach((slide, i) => {
-          (slide as HTMLElement).style.display = i === index ? 'block' : 'none';
-        });
-        updateDots(index);
-      }
+    function showSlide(index: number) {
+      Array.from(slides).forEach((slide, i) => {
+        (slide as HTMLElement).style.display = i === index ? 'block' : 'none';
+      });
+      updateDots(index);
+    }
 
-      function nextSlide() {
-        currentSlide = (currentSlide + 1) % totalSlides;
-        showSlide(currentSlide);
-      }
+    function nextSlide() {
+      currentSlide = (currentSlide + 1) % totalSlides;
+      showSlide(currentSlide);
+    }
 
-      function prevSlide() {
-        currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
-        showSlide(currentSlide);
-      }
+    function prevSlide() {
+      currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+      showSlide(currentSlide);
+    }
 
-      function startAutoplay() {
-        autoplayInterval = setInterval(nextSlide, 5000);
-      }
+    function startAutoplay() {
+      autoplayInterval = setInterval(nextSlide, 5000);
+    }
 
-      function stopAutoplay() {
-        clearInterval(autoplayInterval);
-      }
+    function stopAutoplay() {
+      clearInterval(autoplayInterval);
+    }
 
-      // Initialize
-      showSlide(0);
+    showSlide(0);
+    startAutoplay();
+
+    const prevBtn = wrapper.querySelector('[data-controls="prev"]');
+    const nextBtn = wrapper.querySelector('[data-controls="next"]');
+
+    prevBtn?.addEventListener('click', () => {
+      stopAutoplay();
+      prevSlide();
       startAutoplay();
+    });
 
-      // Controls
-      const prevBtn = wrapper.querySelector('[data-controls="prev"]');
-      const nextBtn = wrapper.querySelector('[data-controls="next"]');
+    nextBtn?.addEventListener('click', () => {
+      stopAutoplay();
+      nextSlide();
+      startAutoplay();
+    });
 
-      prevBtn?.addEventListener('click', () => {
+    dots.forEach((dot, index) => {
+      dot.addEventListener('click', () => {
         stopAutoplay();
-        prevSlide();
+        currentSlide = index;
+        showSlide(currentSlide);
         startAutoplay();
-      });
-
-      nextBtn?.addEventListener('click', () => {
-        stopAutoplay();
-        nextSlide();
-        startAutoplay();
-      });
-
-      dots.forEach((dot, index) => {
-        dot.addEventListener('click', () => {
-          stopAutoplay();
-          currentSlide = index;
-          showSlide(currentSlide);
-          startAutoplay();
-        });
       });
     });
-  });
+  }
+
+  function initSliders() {
+    document.querySelectorAll('.slider-wrap').forEach(buildSlider);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSliders, { once: true });
+  } else {
+    initSliders();
+  }
+
+  document.addEventListener('astro:page-load', initSliders);
 </script>
