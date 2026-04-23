@@ -42,26 +42,166 @@
       {
         "id": "elternkennenlerncaf-2025-09-10",
         "label": "Elternkennenlerncafé",
-        "type": "event",
+        "type": "parent",
         "start": "2025-09-10"
       },
       {
         "id": "elternversammlung-2025-10-15",
         "label": "Elternversammlung",
-        "type": "event",
+        "type": "parent",
         "start": "2025-10-15"
       },
       {
-        "id": "event-1776943202932-hthbhe",
+        "id": "mitgliederversammlung-2025-10-15",
         "label": "Mitgliederversammlung",
-        "type": "event",
+        "type": "parent",
+        "start": "2025-10-15"
+      },
+      {
+        "id": "elternabend-2026-04-22",
+        "label": "Elternabend",
+        "type": "parent",
         "start": "2026-04-22"
+      },
+      {
+        "id": "mitgliederversammlung-2026-04-22",
+        "label": "Mitgliederversammlung",
+        "type": "parent",
+        "start": "2026-04-22"
+      },
+      {
+        "id": "entry-1776946716130-2nymds",
+        "label": "Test",
+        "type": "parent",
+        "start": "2026-06-21"
       },
       {
         "id": "elternkennenlerncaf-2026-09-09",
         "label": "Elternkennenlerncafé",
-        "type": "event",
+        "type": "parent",
         "start": "2026-09-09"
+      },
+      {
+        "id": "herbstfest-vormittags-2025-10-09",
+        "label": "Herbstfest (vormittags)",
+        "type": "family",
+        "start": "2025-10-09"
+      },
+      {
+        "id": "lichterfest-2025-11-14",
+        "label": "Lichterfest",
+        "type": "family",
+        "start": "2025-11-14"
+      },
+      {
+        "id": "adventssingen-2025-12-05",
+        "label": "Adventssingen",
+        "type": "family",
+        "start": "2025-12-05"
+      },
+      {
+        "id": "pflanzaktion-2026-05-09",
+        "label": "Pflanzaktion",
+        "type": "family",
+        "start": "2026-05-09"
+      },
+      {
+        "id": "flohmarkt-2026-05-13",
+        "label": "Flohmarkt",
+        "type": "family",
+        "start": "2026-05-13"
+      },
+      {
+        "id": "fotograf-2026-05-20",
+        "label": "Fotograf",
+        "type": "family",
+        "start": "2026-05-20",
+        "end": "2026-05-21"
+      },
+      {
+        "id": "knirpsenfest-2026-06-17",
+        "label": "Knirpsenfest",
+        "type": "family",
+        "start": "2026-06-17"
+      },
+      {
+        "id": "oma-opa-fest-2026-06-19",
+        "label": "Oma-Opa Fest",
+        "type": "family",
+        "start": "2026-06-19"
+      },
+      {
+        "id": "lichterfest-2026-11-12",
+        "label": "Lichterfest",
+        "type": "family",
+        "start": "2026-11-12"
+      },
+      {
+        "id": "adventssingen-2026-12-04",
+        "label": "Adventssingen",
+        "type": "family",
+        "start": "2026-12-04"
+      },
+      {
+        "id": "busfahrt-2025-09-16",
+        "label": "Busfahrt",
+        "type": "child",
+        "start": "2025-09-16"
+      },
+      {
+        "id": "kinder-weihnachtsfeier-2025-12-15",
+        "label": "Kinder-Weihnachtsfeier",
+        "type": "child",
+        "start": "2025-12-15"
+      },
+      {
+        "id": "fasching-2026-02-17",
+        "label": "Fasching",
+        "type": "child",
+        "start": "2026-02-17"
+      },
+      {
+        "id": "osterhase-2026-03-25",
+        "label": "Osterhase",
+        "type": "child",
+        "start": "2026-03-25"
+      },
+      {
+        "id": "fruehlingswanderung-2026-05-05",
+        "label": "Frühlingswanderung",
+        "type": "child",
+        "start": "2026-05-05"
+      },
+      {
+        "id": "kindertagsparty-2026-06-01",
+        "label": "Kindertagsparty",
+        "type": "child",
+        "start": "2026-06-01"
+      },
+      {
+        "id": "minikicker-turnier-2026-06-11",
+        "label": "Minikicker Turnier",
+        "type": "child",
+        "start": "2026-06-11"
+      },
+      {
+        "id": "vorschulabschluss-uebernachtung-2026-06-25",
+        "label": "Vorschulabschluss & Übernachtung",
+        "type": "child",
+        "start": "2026-06-25",
+        "end": "2026-06-26"
+      },
+      {
+        "id": "grosse-busfahrt-2026-09-15",
+        "label": "Große Busfahrt",
+        "type": "child",
+        "start": "2026-09-15"
+      },
+      {
+        "id": "besuch-weihnachtsmann-2026-12-14",
+        "label": "Besuch Weihnachtsmann",
+        "type": "child",
+        "start": "2026-12-14"
       },
       {
         "id": "brueckentag-1-mai-2025-05-02",
@@ -127,103 +267,6 @@
         "type": "closure",
         "start": "2026-12-23",
         "end": "2027-01-01"
-      },
-      {
-        "id": "busfahrt-2025-09-16",
-        "label": "Busfahrt",
-        "type": "festivity",
-        "start": "2025-09-16"
-      },
-      {
-        "id": "herbstfest-vormittags-2025-10-09",
-        "label": "Herbstfest (vormittags)",
-        "type": "festivity",
-        "start": "2025-10-09"
-      },
-      {
-        "id": "lichterfest-2025-11-14",
-        "label": "Lichterfest",
-        "type": "festivity",
-        "start": "2025-11-14"
-      },
-      {
-        "id": "adventssingen-2025-12-05",
-        "label": "Adventssingen",
-        "type": "festivity",
-        "start": "2025-12-05"
-      },
-      {
-        "id": "team-weihnachtsfeier-2025-12-12",
-        "label": "Team-Weihnachtsfeier",
-        "type": "festivity",
-        "start": "2025-12-12"
-      },
-      {
-        "id": "kinder-weihnachtsfeier-2025-12-15",
-        "label": "Kinder-Weihnachtsfeier",
-        "type": "festivity",
-        "start": "2025-12-15"
-      },
-      {
-        "id": "fasching-2026-02-17",
-        "label": "Fasching",
-        "type": "festivity",
-        "start": "2026-02-17"
-      },
-      {
-        "id": "osterhase-2026-03-25",
-        "label": "Osterhase",
-        "type": "festivity",
-        "start": "2026-03-25"
-      },
-      {
-        "id": "kindertagsparty-2026-06-01",
-        "label": "Kindertagsparty",
-        "type": "festivity",
-        "start": "2026-06-01"
-      },
-      {
-        "id": "knirpsenfest-2026-06-17",
-        "label": "Knirpsenfest",
-        "type": "festivity",
-        "start": "2026-06-17"
-      },
-      {
-        "id": "oma-opa-fest-2026-06-19",
-        "label": "Oma-Opa Fest",
-        "type": "festivity",
-        "start": "2026-06-19"
-      },
-      {
-        "id": "vorschulabschluss-uebernachtung-2026-06-25",
-        "label": "Vorschulabschluss & Übernachtung",
-        "type": "festivity",
-        "start": "2026-06-25",
-        "end": "2026-06-26"
-      },
-      {
-        "id": "grosse-busfahrt-2026-09-15",
-        "label": "Große Busfahrt",
-        "type": "festivity",
-        "start": "2026-09-15"
-      },
-      {
-        "id": "lichterfest-2026-11-12",
-        "label": "Lichterfest",
-        "type": "festivity",
-        "start": "2026-11-12"
-      },
-      {
-        "id": "adventssingen-2026-12-04",
-        "label": "Adventssingen",
-        "type": "festivity",
-        "start": "2026-12-04"
-      },
-      {
-        "id": "besuch-weihnachtsmann-2026-12-14",
-        "label": "Besuch Weihnachtsmann",
-        "type": "festivity",
-        "start": "2026-12-14"
       }
     ]
   },
@@ -234,26 +277,166 @@
       {
         "id": "elternkennenlerncaf-2025-09-10",
         "label": "Elternkennenlerncafé",
-        "type": "event",
+        "type": "parent",
         "start": "2025-09-10"
       },
       {
         "id": "elternversammlung-2025-10-15",
         "label": "Elternversammlung",
-        "type": "event",
+        "type": "parent",
         "start": "2025-10-15"
       },
       {
-        "id": "event-1776943202932-hthbhe",
+        "id": "mitgliederversammlung-2025-10-15",
         "label": "Mitgliederversammlung",
-        "type": "event",
+        "type": "parent",
+        "start": "2025-10-15"
+      },
+      {
+        "id": "elternabend-2026-04-22",
+        "label": "Elternabend",
+        "type": "parent",
         "start": "2026-04-22"
+      },
+      {
+        "id": "mitgliederversammlung-2026-04-22",
+        "label": "Mitgliederversammlung",
+        "type": "parent",
+        "start": "2026-04-22"
+      },
+      {
+        "id": "entry-1776946716130-2nymds",
+        "label": "Test",
+        "type": "parent",
+        "start": "2026-06-21"
       },
       {
         "id": "elternkennenlerncaf-2026-09-09",
         "label": "Elternkennenlerncafé",
-        "type": "event",
+        "type": "parent",
         "start": "2026-09-09"
+      },
+      {
+        "id": "herbstfest-vormittags-2025-10-09",
+        "label": "Herbstfest (vormittags)",
+        "type": "family",
+        "start": "2025-10-09"
+      },
+      {
+        "id": "lichterfest-2025-11-14",
+        "label": "Lichterfest",
+        "type": "family",
+        "start": "2025-11-14"
+      },
+      {
+        "id": "adventssingen-2025-12-05",
+        "label": "Adventssingen",
+        "type": "family",
+        "start": "2025-12-05"
+      },
+      {
+        "id": "pflanzaktion-2026-05-09",
+        "label": "Pflanzaktion",
+        "type": "family",
+        "start": "2026-05-09"
+      },
+      {
+        "id": "flohmarkt-2026-05-13",
+        "label": "Flohmarkt",
+        "type": "family",
+        "start": "2026-05-13"
+      },
+      {
+        "id": "fotograf-2026-05-20",
+        "label": "Fotograf",
+        "type": "family",
+        "start": "2026-05-20",
+        "end": "2026-05-21"
+      },
+      {
+        "id": "knirpsenfest-2026-06-17",
+        "label": "Knirpsenfest",
+        "type": "family",
+        "start": "2026-06-17"
+      },
+      {
+        "id": "oma-opa-fest-2026-06-19",
+        "label": "Oma-Opa Fest",
+        "type": "family",
+        "start": "2026-06-19"
+      },
+      {
+        "id": "lichterfest-2026-11-12",
+        "label": "Lichterfest",
+        "type": "family",
+        "start": "2026-11-12"
+      },
+      {
+        "id": "adventssingen-2026-12-04",
+        "label": "Adventssingen",
+        "type": "family",
+        "start": "2026-12-04"
+      },
+      {
+        "id": "busfahrt-2025-09-16",
+        "label": "Busfahrt",
+        "type": "child",
+        "start": "2025-09-16"
+      },
+      {
+        "id": "kinder-weihnachtsfeier-2025-12-15",
+        "label": "Kinder-Weihnachtsfeier",
+        "type": "child",
+        "start": "2025-12-15"
+      },
+      {
+        "id": "fasching-2026-02-17",
+        "label": "Fasching",
+        "type": "child",
+        "start": "2026-02-17"
+      },
+      {
+        "id": "osterhase-2026-03-25",
+        "label": "Osterhase",
+        "type": "child",
+        "start": "2026-03-25"
+      },
+      {
+        "id": "fruehlingswanderung-2026-05-05",
+        "label": "Frühlingswanderung",
+        "type": "child",
+        "start": "2026-05-05"
+      },
+      {
+        "id": "kindertagsparty-2026-06-01",
+        "label": "Kindertagsparty",
+        "type": "child",
+        "start": "2026-06-01"
+      },
+      {
+        "id": "minikicker-turnier-2026-06-11",
+        "label": "Minikicker Turnier",
+        "type": "child",
+        "start": "2026-06-11"
+      },
+      {
+        "id": "vorschulabschluss-uebernachtung-2026-06-25",
+        "label": "Vorschulabschluss & Übernachtung",
+        "type": "child",
+        "start": "2026-06-25",
+        "end": "2026-06-26"
+      },
+      {
+        "id": "grosse-busfahrt-2026-09-15",
+        "label": "Große Busfahrt",
+        "type": "child",
+        "start": "2026-09-15"
+      },
+      {
+        "id": "besuch-weihnachtsmann-2026-12-14",
+        "label": "Besuch Weihnachtsmann",
+        "type": "child",
+        "start": "2026-12-14"
       },
       {
         "id": "brueckentag-1-mai-2025-05-02",
@@ -319,106 +502,9 @@
         "type": "closure",
         "start": "2026-12-23",
         "end": "2027-01-01"
-      },
-      {
-        "id": "busfahrt-2025-09-16",
-        "label": "Busfahrt",
-        "type": "festivity",
-        "start": "2025-09-16"
-      },
-      {
-        "id": "herbstfest-vormittags-2025-10-09",
-        "label": "Herbstfest (vormittags)",
-        "type": "festivity",
-        "start": "2025-10-09"
-      },
-      {
-        "id": "lichterfest-2025-11-14",
-        "label": "Lichterfest",
-        "type": "festivity",
-        "start": "2025-11-14"
-      },
-      {
-        "id": "adventssingen-2025-12-05",
-        "label": "Adventssingen",
-        "type": "festivity",
-        "start": "2025-12-05"
-      },
-      {
-        "id": "team-weihnachtsfeier-2025-12-12",
-        "label": "Team-Weihnachtsfeier",
-        "type": "festivity",
-        "start": "2025-12-12"
-      },
-      {
-        "id": "kinder-weihnachtsfeier-2025-12-15",
-        "label": "Kinder-Weihnachtsfeier",
-        "type": "festivity",
-        "start": "2025-12-15"
-      },
-      {
-        "id": "fasching-2026-02-17",
-        "label": "Fasching",
-        "type": "festivity",
-        "start": "2026-02-17"
-      },
-      {
-        "id": "osterhase-2026-03-25",
-        "label": "Osterhase",
-        "type": "festivity",
-        "start": "2026-03-25"
-      },
-      {
-        "id": "kindertagsparty-2026-06-01",
-        "label": "Kindertagsparty",
-        "type": "festivity",
-        "start": "2026-06-01"
-      },
-      {
-        "id": "knirpsenfest-2026-06-17",
-        "label": "Knirpsenfest",
-        "type": "festivity",
-        "start": "2026-06-17"
-      },
-      {
-        "id": "oma-opa-fest-2026-06-19",
-        "label": "Oma-Opa Fest",
-        "type": "festivity",
-        "start": "2026-06-19"
-      },
-      {
-        "id": "vorschulabschluss-uebernachtung-2026-06-25",
-        "label": "Vorschulabschluss & Übernachtung",
-        "type": "festivity",
-        "start": "2026-06-25",
-        "end": "2026-06-26"
-      },
-      {
-        "id": "grosse-busfahrt-2026-09-15",
-        "label": "Große Busfahrt",
-        "type": "festivity",
-        "start": "2026-09-15"
-      },
-      {
-        "id": "lichterfest-2026-11-12",
-        "label": "Lichterfest",
-        "type": "festivity",
-        "start": "2026-11-12"
-      },
-      {
-        "id": "adventssingen-2026-12-04",
-        "label": "Adventssingen",
-        "type": "festivity",
-        "start": "2026-12-04"
-      },
-      {
-        "id": "besuch-weihnachtsmann-2026-12-14",
-        "label": "Besuch Weihnachtsmann",
-        "type": "festivity",
-        "start": "2026-12-14"
       }
     ]
   },
-  "updatedAt": "2026-04-23T11:21:49.128Z",
-  "publishedAt": "2026-04-23T11:21:49.128Z"
+  "updatedAt": "2026-04-23T16:01:05.315Z",
+  "publishedAt": "2026-04-23T16:01:05.315Z"
 }
