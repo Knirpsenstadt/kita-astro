@@ -1,0 +1,991 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import { getSession, setModeCookie } from '../../lib/cms/auth'
+import { ICON_OPTIONS } from '../../lib/iconOptions'
+
+const session = getSession(Astro.cookies)
+
+if (!session) {
+  return Astro.redirect('/admin?next=/admin/documents')
+}
+
+setModeCookie(Astro.cookies, Astro.request, 'draft')
+
+const csrfToken = session.csrf
+---
+
+<BaseLayout title="Admin - Dokumente" description="Dokumentenverwaltung">
+  <article class="admin-shell">
+    <div class="admin-head">
+      <h1>Dokumente verwalten</h1>
+      <div class="admin-actions">
+        <a class="admin-btn subtle" href="/admin">Zurück</a>
+        <button type="button" id="load-live-btn" class="admin-btn subtle">Live-Daten laden</button>
+        <button type="button" id="load-baseline-btn" class="admin-btn subtle">Website-Standard laden</button>
+        <button type="button" id="save-documents-btn" class="admin-btn">Entwurf speichern</button>
+        <button type="button" id="publish-btn" class="admin-btn">Publizieren</button>
+      </div>
+    </div>
+
+    <p class="admin-intro">Dokumente erscheinen kompakt als Liste. Bearbeitet oder neu angelegt werden sie im Dialog.</p>
+    <p id="source-hint" class="source-hint"></p>
+    <p id="admin-status" class="admin-state" aria-live="polite"></p>
+
+    <div id="document-groups" class="group-list"></div>
+  </article>
+
+  <dialog id="document-modal" class="document-modal">
+    <form method="dialog" class="document-modal__surface">
+      <div class="document-modal__head">
+        <div>
+          <p id="document-modal-group" class="document-modal__eyebrow"></p>
+          <h2 id="document-modal-title">Dokument bearbeiten</h2>
+        </div>
+        <button type="button" class="icon-btn" id="close-document-modal" aria-label="Dialog schließen">✕</button>
+      </div>
+
+      <p id="document-modal-status" class="admin-state" aria-live="polite"></p>
+
+      <div class="document-form">
+        <label class="document-field">
+          <span>Titel</span>
+          <input id="document-title" type="text" />
+        </label>
+
+        <label class="document-field">
+          <span>Badge</span>
+          <input id="document-badge" type="text" placeholder="PDF" />
+        </label>
+
+        <label class="document-field document-field--wide">
+          <span>Datei / URL</span>
+          <input id="document-href" type="text" placeholder="/uploads/... oder https://..." />
+        </label>
+
+        <label class="document-field document-field--wide">
+          <span>Beschreibung</span>
+          <textarea id="document-description" rows="3"></textarea>
+        </label>
+      </div>
+
+      <div class="document-upload-row">
+        <button type="button" class="admin-btn subtle" id="document-upload-btn">Datei hochladen</button>
+        <input id="document-upload-input" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods" hidden />
+        <a id="document-open-link" class="inline-link hidden" href="#" target="_blank" rel="noopener noreferrer">Datei öffnen</a>
+      </div>
+
+      <div class="icon-picker">
+        <div class="icon-picker__head">
+          <h3>Icon</h3>
+          <p>Direkt auf ein Symbol klicken. Alle verfügbaren Optionen sind sichtbar.</p>
+        </div>
+        <div id="document-icon-picker" class="icon-picker__grid"></div>
+      </div>
+
+      <div class="document-modal__actions">
+        <button type="button" class="admin-btn subtle" id="cancel-document-modal">Abbrechen</button>
+        <button type="button" class="admin-btn" id="save-document-modal">Speichern</button>
+      </div>
+    </form>
+  </dialog>
+</BaseLayout>
+
+<script define:vars={{ csrfToken, iconOptions: ICON_OPTIONS }}>
+  const state = {
+    documentGroups: [],
+    publishedDocumentGroups: [],
+    baselineDocumentGroups: [],
+    source: 'draft',
+    modal: {
+      mode: 'add',
+      groupIndex: -1,
+      documentIndex: -1,
+      draft: null,
+    },
+  };
+
+  function createId(prefix) {
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  function cloneGroups(groups) {
+    return (Array.isArray(groups) ? groups : []).map((group) => ({
+      ...group,
+      documents: Array.isArray(group.documents) ? group.documents.map((item) => ({ ...item })) : [],
+    }));
+  }
+
+  function escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function apiErrorMessage(error) {
+    return error instanceof Error ? error.message : 'Anfrage fehlgeschlagen.';
+  }
+
+  function setStatus(text, isError, targetId = 'admin-status') {
+    const node = document.getElementById(targetId);
+    if (!node) return;
+    node.textContent = text || '';
+    node.classList.toggle('error', !!isError);
+  }
+
+  function getDocumentCount(groups) {
+    return (Array.isArray(groups) ? groups : []).reduce((count, group) => count + (group.documents?.length || 0), 0);
+  }
+
+  function setSourceHint() {
+    const node = document.getElementById('source-hint');
+    if (!node) return;
+    const label = state.source === 'baseline' ? 'Website-Standard' : state.source === 'published' ? 'Live' : 'Entwurf';
+    node.textContent = `Aktuelle Quelle: ${label} (${getDocumentCount(state.documentGroups)} Dokumente in ${state.documentGroups.length} Bereichen)`;
+  }
+
+  function markDraftSource() {
+    state.source = 'draft';
+    setSourceHint();
+  }
+
+  async function api(url, options) {
+    const response = await fetch(url, options);
+    const result = await response.json().catch(() => ({ error: 'Unerwartete Antwort.' }));
+    if (!response.ok) {
+      throw new Error(result.error || 'Anfrage fehlgeschlagen.');
+    }
+    return result;
+  }
+
+  function moveItem(list, fromIndex, toIndex) {
+    if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return;
+    if (fromIndex >= list.length || toIndex >= list.length) return;
+    const [item] = list.splice(fromIndex, 1);
+    list.splice(toIndex, 0, item);
+  }
+
+  function inferBadgeFromPath(path) {
+    const cleanPath = String(path || '').split('?')[0].split('#')[0];
+    const match = cleanPath.match(/\.([a-z0-9]+)$/i);
+    return match ? match[1].toUpperCase() : 'DATEI';
+  }
+
+  function getIconOption(value) {
+    return iconOptions.find((option) => option.value === value) || iconOptions.find((option) => option.value === 'document') || iconOptions[0];
+  }
+
+  function createIconSvg(path) {
+    return (
+      '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">' +
+        '<path stroke-linecap="round" stroke-linejoin="round" d="' + escapeHtml(path) + '"></path>' +
+      '</svg>'
+    );
+  }
+
+  function summarizeHref(href) {
+    if (!href) return 'Keine Datei verknüpft';
+    if (href.length <= 44) return href;
+    return '...' + href.slice(-41);
+  }
+
+  function defaultDocument(group, groupIndex) {
+    return {
+      id: createId(group?.id || `documents-group-${groupIndex + 1}`),
+      title: '',
+      description: '',
+      href: '',
+      icon: 'document',
+      badge: 'PDF',
+    };
+  }
+
+  function getModalElements() {
+    return {
+      dialog: document.getElementById('document-modal'),
+      title: document.getElementById('document-modal-title'),
+      group: document.getElementById('document-modal-group'),
+      openLink: document.getElementById('document-open-link'),
+      titleInput: document.getElementById('document-title'),
+      badgeInput: document.getElementById('document-badge'),
+      hrefInput: document.getElementById('document-href'),
+      descriptionInput: document.getElementById('document-description'),
+      iconPicker: document.getElementById('document-icon-picker'),
+    };
+  }
+
+  function renderIconPicker() {
+    const { iconPicker } = getModalElements();
+    if (!iconPicker || !state.modal.draft) return;
+
+    iconPicker.innerHTML = iconOptions
+      .map((option) => {
+        const selected = option.value === state.modal.draft.icon;
+        return (
+          '<button type="button" class="icon-choice' + (selected ? ' is-selected' : '') + '" data-icon-value="' + escapeHtml(option.value) + '">' +
+            '<span class="icon-choice__glyph">' + createIconSvg(option.path) + '</span>' +
+            '<span class="icon-choice__label">' + escapeHtml(option.label) + '</span>' +
+            '<span class="icon-choice__value">' + escapeHtml(option.value) + '</span>' +
+          '</button>'
+        );
+      })
+      .join('');
+
+    iconPicker.querySelectorAll('[data-icon-value]').forEach((button) => {
+      button.addEventListener('click', () => {
+        if (!state.modal.draft) return;
+        state.modal.draft.icon = button.getAttribute('data-icon-value') || 'document';
+        renderIconPicker();
+      });
+    });
+  }
+
+  function syncModalOpenLink() {
+    const { openLink } = getModalElements();
+    const draft = state.modal.draft;
+    if (!openLink || !draft) return;
+
+    if (draft.href) {
+      openLink.href = draft.href;
+      openLink.classList.remove('hidden');
+    } else {
+      openLink.href = '#';
+      openLink.classList.add('hidden');
+    }
+  }
+
+  function syncModalForm() {
+    const { title, group, titleInput, badgeInput, hrefInput, descriptionInput } = getModalElements();
+    const draft = state.modal.draft;
+    if (!draft) return;
+
+    const groupData = state.documentGroups[state.modal.groupIndex];
+    const groupLabel = groupData?.heading?.trim() || `Bereich ${state.modal.groupIndex + 1}`;
+
+    if (title) {
+      title.textContent = state.modal.mode === 'add' ? 'Dokument hinzufügen' : 'Dokument bearbeiten';
+    }
+    if (group) {
+      group.textContent = groupLabel;
+    }
+    if (titleInput) titleInput.value = draft.title || '';
+    if (badgeInput) badgeInput.value = draft.badge || '';
+    if (hrefInput) hrefInput.value = draft.href || '';
+    if (descriptionInput) descriptionInput.value = draft.description || '';
+
+    syncModalOpenLink();
+    renderIconPicker();
+    setStatus('', false, 'document-modal-status');
+  }
+
+  function openDocumentModal(mode, groupIndex, documentIndex = -1) {
+    const group = state.documentGroups[groupIndex];
+    if (!group) return;
+
+    state.modal.mode = mode;
+    state.modal.groupIndex = groupIndex;
+    state.modal.documentIndex = documentIndex;
+    state.modal.draft =
+      mode === 'edit' && group.documents[documentIndex]
+        ? { ...group.documents[documentIndex] }
+        : defaultDocument(group, groupIndex);
+
+    syncModalForm();
+    getModalElements().dialog?.showModal();
+  }
+
+  function closeDocumentModal() {
+    getModalElements().dialog?.close();
+    state.modal.draft = null;
+    setStatus('', false, 'document-modal-status');
+  }
+
+  function updateModalDraft(field, value) {
+    if (!state.modal.draft) return;
+    state.modal.draft[field] = value;
+    if (field === 'href' && !state.modal.draft.badge) {
+      state.modal.draft.badge = inferBadgeFromPath(value);
+      const { badgeInput } = getModalElements();
+      if (badgeInput) {
+        badgeInput.value = state.modal.draft.badge;
+      }
+    }
+    if (field === 'href') {
+      syncModalOpenLink();
+    }
+  }
+
+  async function uploadDocumentForModal(file) {
+    if (!file || !state.modal.draft) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('category', 'documents');
+
+    try {
+      setStatus('Datei wird hochgeladen ...', false, 'document-modal-status');
+      const result = await api('/api/admin/upload', {
+        method: 'POST',
+        headers: { 'x-cms-csrf': csrfToken },
+        body: formData,
+      });
+
+      state.modal.draft.href = result.src;
+      if (!state.modal.draft.badge) {
+        state.modal.draft.badge = inferBadgeFromPath(file.name);
+      }
+      if (!state.modal.draft.title) {
+        state.modal.draft.title = file.name.replace(/\.[^.]+$/, '');
+      }
+      syncModalForm();
+      setStatus('Datei hochgeladen.', false, 'document-modal-status');
+    } catch (error) {
+      setStatus(apiErrorMessage(error), true, 'document-modal-status');
+    }
+  }
+
+  function saveModalDocument() {
+    const group = state.documentGroups[state.modal.groupIndex];
+    const draft = state.modal.draft;
+    if (!group || !draft) return;
+
+    const title = (draft.title || '').trim();
+    const href = (draft.href || '').trim();
+    if (!title) {
+      setStatus('Bitte einen Titel angeben.', true, 'document-modal-status');
+      return;
+    }
+    if (!href) {
+      setStatus('Bitte eine Datei oder URL angeben.', true, 'document-modal-status');
+      return;
+    }
+
+    draft.title = title;
+    draft.href = href;
+    draft.badge = (draft.badge || inferBadgeFromPath(href)).trim();
+    draft.description = (draft.description || '').trim();
+    draft.icon = draft.icon || 'document';
+
+    if (state.modal.mode === 'edit' && state.modal.documentIndex >= 0) {
+      group.documents[state.modal.documentIndex] = { ...draft };
+    } else {
+      group.documents.push({ ...draft });
+    }
+
+    markDraftSource();
+    renderDocumentGroups();
+    closeDocumentModal();
+  }
+
+  function bindDocumentRow(row, groupIndex, documentIndex) {
+    const group = state.documentGroups[groupIndex];
+    const item = group.documents[documentIndex];
+
+    row.querySelector('[data-action="edit"]')?.addEventListener('click', () => {
+      openDocumentModal('edit', groupIndex, documentIndex);
+    });
+
+    row.querySelector('[data-action="up"]')?.addEventListener('click', () => {
+      if (documentIndex === 0) return;
+      moveItem(group.documents, documentIndex, documentIndex - 1);
+      markDraftSource();
+      renderDocumentGroups();
+    });
+
+    row.querySelector('[data-action="down"]')?.addEventListener('click', () => {
+      if (documentIndex >= group.documents.length - 1) return;
+      moveItem(group.documents, documentIndex, documentIndex + 1);
+      markDraftSource();
+      renderDocumentGroups();
+    });
+
+    row.querySelector('[data-action="remove"]')?.addEventListener('click', () => {
+      const label = (item.title || 'dieses Dokument').trim();
+      if (!window.confirm(`Dokument "${label}" wirklich entfernen?`)) return;
+      group.documents.splice(documentIndex, 1);
+      markDraftSource();
+      renderDocumentGroups();
+    });
+  }
+
+  function renderDocumentGroups() {
+    const root = document.getElementById('document-groups');
+    if (!root) return;
+    root.innerHTML = '';
+
+    if (state.documentGroups.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'empty-state';
+      empty.textContent = 'Keine Dokumentbereiche gefunden.';
+      root.appendChild(empty);
+      return;
+    }
+
+    state.documentGroups.forEach((group, groupIndex) => {
+      const section = document.createElement('section');
+      section.className = 'group-card';
+
+      const heading = group.heading?.trim() || `Bereich ${groupIndex + 1}`;
+      section.innerHTML =
+        '<div class="group-head">' +
+          '<div>' +
+            '<h2>' + escapeHtml(heading) + '</h2>' +
+            '<p>' + (group.documents?.length || 0) + ' Dokumente</p>' +
+          '</div>' +
+          '<button type="button" class="admin-btn subtle" data-action="add-document">Dokument hinzufügen</button>' +
+        '</div>' +
+        '<div class="document-list"></div>';
+
+      section.querySelector('[data-action="add-document"]')?.addEventListener('click', () => {
+        openDocumentModal('add', groupIndex);
+      });
+
+      const list = section.querySelector('.document-list');
+      if (!list) return;
+
+      if (!group.documents || group.documents.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'empty-inline';
+        empty.textContent = 'Noch keine Dokumente in diesem Bereich.';
+        list.appendChild(empty);
+      } else {
+        group.documents.forEach((item, documentIndex) => {
+          const icon = getIconOption(item.icon);
+          const row = document.createElement('div');
+          row.className = 'document-row';
+          row.innerHTML =
+            '<div class="document-row__main">' +
+              '<span class="document-row__order">' + (documentIndex + 1) + '</span>' +
+              '<span class="document-row__icon">' + createIconSvg(icon.path) + '</span>' +
+              '<div class="document-row__content">' +
+                '<div class="document-row__meta">' +
+                  '<strong>' + escapeHtml(item.title || 'Ohne Titel') + '</strong>' +
+                  '<span class="document-chip">' + escapeHtml(item.badge || inferBadgeFromPath(item.href)) + '</span>' +
+                '</div>' +
+                '<p>' + escapeHtml(item.description || summarizeHref(item.href)) + '</p>' +
+              '</div>' +
+            '</div>' +
+            '<div class="document-row__actions">' +
+              (item.href
+                ? '<a class="inline-link small-link" href="' + escapeHtml(item.href) + '" target="_blank" rel="noopener noreferrer">Öffnen</a>'
+                : '') +
+              '<button type="button" class="admin-btn subtle small" data-action="edit">Bearbeiten</button>' +
+              '<button type="button" class="admin-btn subtle small" data-action="up">▲</button>' +
+              '<button type="button" class="admin-btn subtle small" data-action="down">▼</button>' +
+              '<button type="button" class="admin-btn danger small" data-action="remove">Entfernen</button>' +
+            '</div>';
+
+          list.appendChild(row);
+          bindDocumentRow(row, groupIndex, documentIndex);
+        });
+      }
+
+      root.appendChild(section);
+    });
+  }
+
+  async function loadCollections() {
+    const result = await api('/api/admin/collections');
+    const draftDocumentGroups = Array.isArray(result?.draftData?.documentGroups) ? result.draftData.documentGroups : [];
+    const publishedDocumentGroups = Array.isArray(result?.publishedData?.documentGroups)
+      ? result.publishedData.documentGroups
+      : [];
+    const baselineDocumentGroups = Array.isArray(result?.baselineData?.documentGroups)
+      ? result.baselineData.documentGroups
+      : [];
+
+    state.publishedDocumentGroups = cloneGroups(publishedDocumentGroups);
+    state.baselineDocumentGroups = cloneGroups(baselineDocumentGroups);
+
+    const shouldPreferBaseline =
+      draftDocumentGroups.length === 0 && publishedDocumentGroups.length === 0 && baselineDocumentGroups.length > 0;
+
+    state.documentGroups = shouldPreferBaseline
+      ? cloneGroups(baselineDocumentGroups)
+      : cloneGroups(draftDocumentGroups);
+    state.source = shouldPreferBaseline ? 'baseline' : 'draft';
+    setSourceHint();
+    renderDocumentGroups();
+  }
+
+  async function saveDocumentGroups() {
+    await api('/api/admin/collections', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-cms-csrf': csrfToken,
+      },
+      body: JSON.stringify({ documentGroups: state.documentGroups }),
+    });
+  }
+
+  document.getElementById('load-live-btn')?.addEventListener('click', () => {
+    if (state.publishedDocumentGroups.length === 0) {
+      setStatus('Keine Live-Dokumente gefunden.');
+      return;
+    }
+    if (!window.confirm('Entwurf mit Live-Daten ersetzen? Nicht gespeicherte Änderungen gehen verloren.')) return;
+    state.documentGroups = cloneGroups(state.publishedDocumentGroups);
+    state.source = 'published';
+    setSourceHint();
+    renderDocumentGroups();
+    setStatus('Live-Daten geladen. Jetzt speichern, wenn du sie behalten willst.');
+  });
+
+  document.getElementById('load-baseline-btn')?.addEventListener('click', () => {
+    if (state.baselineDocumentGroups.length === 0) {
+      setStatus('Keine Website-Standarddaten gefunden.');
+      return;
+    }
+    if (!window.confirm('Entwurf mit Website-Standard ersetzen? Nicht gespeicherte Änderungen gehen verloren.')) return;
+    state.documentGroups = cloneGroups(state.baselineDocumentGroups);
+    state.source = 'baseline';
+    setSourceHint();
+    renderDocumentGroups();
+    setStatus('Website-Standard geladen. Jetzt speichern, wenn du ihn behalten willst.');
+  });
+
+  document.getElementById('save-documents-btn')?.addEventListener('click', async () => {
+    try {
+      setStatus('Speichere Entwurf ...');
+      await saveDocumentGroups();
+      setStatus('Entwurf gespeichert.');
+    } catch (error) {
+      setStatus(apiErrorMessage(error), true);
+    }
+  });
+
+  document.getElementById('publish-btn')?.addEventListener('click', async () => {
+    try {
+      setStatus('Speichere Entwurf ...');
+      await saveDocumentGroups();
+      setStatus('Publiziere Entwurf ...');
+      await api('/api/admin/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-cms-csrf': csrfToken },
+      });
+      setStatus('Erfolgreich publiziert.');
+    } catch (error) {
+      setStatus(apiErrorMessage(error), true);
+    }
+  });
+
+  document.getElementById('close-document-modal')?.addEventListener('click', closeDocumentModal);
+  document.getElementById('cancel-document-modal')?.addEventListener('click', closeDocumentModal);
+  document.getElementById('save-document-modal')?.addEventListener('click', saveModalDocument);
+
+  document.getElementById('document-title')?.addEventListener('input', (event) => {
+    updateModalDraft('title', event.currentTarget.value);
+  });
+
+  document.getElementById('document-badge')?.addEventListener('input', (event) => {
+    updateModalDraft('badge', event.currentTarget.value);
+  });
+
+  document.getElementById('document-href')?.addEventListener('input', (event) => {
+    updateModalDraft('href', event.currentTarget.value);
+  });
+
+  document.getElementById('document-description')?.addEventListener('input', (event) => {
+    updateModalDraft('description', event.currentTarget.value);
+  });
+
+  document.getElementById('document-upload-btn')?.addEventListener('click', () => {
+    document.getElementById('document-upload-input')?.click();
+  });
+
+  document.getElementById('document-upload-input')?.addEventListener('change', async (event) => {
+    const input = event.currentTarget;
+    const file = input?.files?.[0];
+    if (!file) return;
+    await uploadDocumentForModal(file);
+    input.value = '';
+  });
+
+  document.getElementById('document-modal')?.addEventListener('close', () => {
+    state.modal.draft = null;
+    setStatus('', false, 'document-modal-status');
+  });
+
+  loadCollections().catch((error) => setStatus(apiErrorMessage(error), true));
+</script>
+
+<style is:global>
+  .admin-shell {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: grid;
+    gap: 0.9rem;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.2rem;
+  }
+
+  .admin-head {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .admin-head h1,
+  .group-head h2,
+  .icon-picker__head h3 {
+    margin: 0;
+  }
+
+  .admin-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .admin-intro,
+  .source-hint,
+  .group-head p,
+  .icon-picker__head p,
+  .document-row__content p,
+  .document-modal__eyebrow {
+    margin: 0;
+    color: var(--muted);
+  }
+
+  .group-list {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .group-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: #fafafa;
+    padding: 1rem;
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .group-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .document-list {
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .document-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.8rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: #fff;
+  }
+
+  .document-row__main,
+  .document-row__meta,
+  .document-row__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .document-row__main {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .document-row__content {
+    min-width: 0;
+    display: grid;
+    gap: 0.2rem;
+  }
+
+  .document-row__content strong {
+    font-size: 1rem;
+    color: var(--ink-700);
+  }
+
+  .document-row__content p {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .document-row__order,
+  .document-row__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .document-row__order {
+    min-width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    background: var(--brand-100);
+    color: var(--brand-700);
+    font-weight: 700;
+  }
+
+  .document-row__icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.85rem;
+    background: var(--brand-50);
+    color: var(--brand-700);
+  }
+
+  .document-row__icon svg,
+  .icon-choice__glyph svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .document-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 1.7rem;
+    padding: 0 0.65rem;
+    border-radius: 999px;
+    background: var(--brand-50);
+    color: var(--brand-700);
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .document-row__actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .document-modal {
+    width: min(860px, calc(100vw - 2rem));
+    border: 0;
+    padding: 0;
+    background: transparent;
+  }
+
+  .document-modal::backdrop {
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(2px);
+  }
+
+  .document-modal__surface {
+    display: grid;
+    gap: 1rem;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 1.2rem;
+    padding: 1.2rem;
+    box-shadow: 0 24px 80px rgba(15, 23, 42, 0.18);
+  }
+
+  .document-modal__head,
+  .document-modal__actions,
+  .document-upload-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .icon-btn {
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--ink-700);
+    cursor: pointer;
+    font: inherit;
+  }
+
+  .document-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+  }
+
+  .document-field {
+    display: grid;
+    gap: 0.35rem;
+    font-weight: 700;
+    color: var(--ink-700);
+  }
+
+  .document-field--wide {
+    grid-column: 1 / -1;
+  }
+
+  .document-field input,
+  .document-field textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.7rem 0.8rem;
+    font: inherit;
+    font-weight: 400;
+    color: var(--ink-700);
+    background: #fff;
+  }
+
+  .icon-picker {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .icon-picker__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 0.6rem;
+  }
+
+  .icon-choice {
+    display: grid;
+    justify-items: center;
+    gap: 0.35rem;
+    padding: 0.75rem 0.55rem;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background: #fff;
+    color: var(--ink-700);
+    cursor: pointer;
+    text-align: center;
+    font: inherit;
+  }
+
+  .icon-choice.is-selected {
+    border-color: var(--brand-500);
+    background: var(--brand-50);
+    color: var(--brand-700);
+    box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.18);
+  }
+
+  .icon-choice__glyph {
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(148, 163, 184, 0.1);
+  }
+
+  .icon-choice__label {
+    font-weight: 700;
+    font-size: 0.92rem;
+  }
+
+  .icon-choice__value {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  .admin-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 999px;
+    background: var(--brand-700);
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 0.55rem 1rem;
+    cursor: pointer;
+  }
+
+  .admin-btn.subtle {
+    background: var(--ink-600);
+  }
+
+  .admin-btn.danger {
+    background: #b91c1c;
+  }
+
+  .admin-btn.small {
+    padding: 0.45rem 0.7rem;
+    font-size: 0.86rem;
+  }
+
+  .admin-state {
+    min-height: 1.2rem;
+    margin: 0;
+    color: var(--muted);
+  }
+
+  .admin-state.error,
+  .admin-state.error * {
+    color: #b91c1c;
+    font-weight: 700;
+  }
+
+  .inline-link {
+    color: var(--brand-700);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .inline-link.hidden {
+    display: none;
+  }
+
+  .small-link {
+    font-size: 0.9rem;
+  }
+
+  .empty-inline,
+  .empty-state {
+    color: var(--muted);
+  }
+
+  .empty-state {
+    margin: 0;
+    padding: 1rem;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-md);
+  }
+
+  @media (max-width: 860px) {
+    .document-row,
+    .document-row__main {
+      align-items: flex-start;
+    }
+
+    .document-row {
+      flex-direction: column;
+    }
+
+    .document-row__actions {
+      width: 100%;
+      justify-content: flex-start;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .admin-shell,
+    .document-modal__surface {
+      padding: 1rem;
+    }
+
+    .document-form {
+      grid-template-columns: 1fr;
+    }
+
+    .icon-picker__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

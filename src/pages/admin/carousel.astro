@@ -1,12 +1,14 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro'
-import { getSession } from '../../lib/cms/auth'
+import { getSession, setModeCookie } from '../../lib/cms/auth'
 
 const session = getSession(Astro.cookies)
 
 if (!session) {
   return Astro.redirect('/admin?next=/admin/carousel')
 }
+
+setModeCookie(Astro.cookies, Astro.request, 'draft')
 
 const csrfToken = session.csrf
 ---

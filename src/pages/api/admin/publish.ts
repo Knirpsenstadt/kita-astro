@@ -24,6 +24,10 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   store.publishedData = {
     sponsors: store.draftData.sponsors.map((item) => ({ ...item })),
     carouselImages: [...store.draftData.carouselImages],
+    documentGroups: store.draftData.documentGroups.map((group) => ({
+      ...group,
+      documents: group.documents.map((item) => ({ ...item })),
+    })),
     events: store.draftData.events.map((item) => ({ ...item })),
   }
   store.updatedAt = new Date().toISOString()

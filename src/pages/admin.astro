@@ -1,10 +1,14 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro'
-import { getSession, safeRedirectPath } from '../lib/cms/auth'
+import { getSession, safeRedirectPath, setModeCookie } from '../lib/cms/auth'
 
 const session = getSession(Astro.cookies)
 const nextPath = safeRedirectPath(Astro.url.searchParams.get('next'))
 const csrfToken = session?.csrf || ''
+
+if (session) {
+  setModeCookie(Astro.cookies, Astro.request, 'draft')
+}
 ---
 
 <BaseLayout title="Admin" description="Inline CMS Login">
@@ -37,6 +41,10 @@ const csrfToken = session?.csrf || ''
           <a href="/admin/calendar" class="admin-panel-link">
             <h2>Kalender</h2>
             <p>Alle Termine als Liste bearbeiten, sortieren und als Entwurf speichern.</p>
+          </a>
+          <a href="/admin/documents" class="admin-panel-link">
+            <h2>Dokumente</h2>
+            <p>Dokumentkarten verwalten und neue Dateien für die Dokumente-Seite hochladen.</p>
           </a>
           <a href="/vorschau" class="admin-panel-link">
             <h2>Inline Texte</h2>

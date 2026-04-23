@@ -137,6 +137,34 @@
     selection.addRange(range);
   }
 
+  function placeCaretFromPoint(element, x, y) {
+    if (!(element instanceof HTMLElement)) return false;
+
+    const selection = window.getSelection();
+    if (!selection) return false;
+
+    let range = null;
+
+    if (document.caretPositionFromPoint) {
+      const position = document.caretPositionFromPoint(x, y);
+      if (position) {
+        range = document.createRange();
+        range.setStart(position.offsetNode, position.offset);
+        range.collapse(true);
+      }
+    } else if (document.caretRangeFromPoint) {
+      range = document.caretRangeFromPoint(x, y);
+    }
+
+    if (!range || !element.contains(range.startContainer)) {
+      return false;
+    }
+
+    selection.removeAllRanges();
+    selection.addRange(range);
+    return true;
+  }
+
   function installEditableLinkGuard() {
     if (window.__cmsInlineLinkGuardInstalled) return;
 
@@ -164,7 +192,9 @@
         const editable = target.closest(EDIT_SELECTOR) || link.querySelector(EDIT_SELECTOR);
         if (editable instanceof HTMLElement) {
           editable.focus();
-          moveCaretToEnd(editable);
+          if (!placeCaretFromPoint(editable, event.clientX, event.clientY)) {
+            moveCaretToEnd(editable);
+          }
         }
 
         setStatus('Link deaktiviert während Bearbeitung. Mit Cmd/Ctrl+Klick öffnen.', 'muted');

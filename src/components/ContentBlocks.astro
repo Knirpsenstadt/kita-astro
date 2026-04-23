@@ -1,6 +1,7 @@
 ---
 import { getIconPath } from '../lib/iconOptions'
 import type { CmsRuntime } from '../lib/cms/runtime'
+import type { CmsDocumentGroup } from '../lib/cms/types'
 
 interface Props {
   blocks?: any[]
@@ -11,7 +12,31 @@ interface Props {
 const { blocks = [], cms, contentKeyPrefix = 'page.blocks' } = Astro.props
 
 const text = (key: string, fallback: string) => (cms ? cms.text(key, fallback) : fallback)
-const attrs = (key: string) => (cms ? cms.attrs(key) : {})
+const isDocumentsPage = contentKeyPrefix === 'pages.dokumente.blocks'
+const attrs = (key: string) => (cms && !isDocumentsPage ? cms.attrs(key) : {})
+
+function getFallbackDocumentGroups(): CmsDocumentGroup[] {
+  return blocks
+    .filter((block: any) => block?._template === 'docGrid')
+    .map((block: any, index: number) => ({
+      id: `documents-group-${index + 1}`,
+      heading: '',
+      documents: Array.isArray(block.documents) ? block.documents : [],
+    }))
+}
+
+const effectiveDocumentGroups =
+  isDocumentsPage && cms ? cms.documentGroups(getFallbackDocumentGroups()) : []
+
+function getDocumentGroupIndex(blockIndex: number): number {
+  let count = -1
+  for (let index = 0; index <= blockIndex; index += 1) {
+    if (blocks[index]?._template === 'docGrid') {
+      count += 1
+    }
+  }
+  return count
+}
 ---
 
 {blocks.map((block: any, blockIndex: number) => {
@@ -143,9 +168,12 @@ const attrs = (key: string) => (cms ? cms.attrs(key) : {})
   }
 
   if (block._template === 'docGrid') {
+    const documentGroup = isDocumentsPage ? effectiveDocumentGroups[getDocumentGroupIndex(blockIndex)] : null
+    const documents = documentGroup?.documents || block.documents || []
+
     return (
       <div class="doc-grid">
-        {block.documents?.map((item: any, documentIndex: number) => (
+        {documents.map((item: any, documentIndex: number) => (
           <a href={item.href} class="doc-card" target="_blank" rel="noopener noreferrer">
             <div class="doc-icon">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -153,9 +181,9 @@ const attrs = (key: string) => (cms ? cms.attrs(key) : {})
               </svg>
             </div>
             <div class="doc-content">
-              <h3 {...attrs(`${blockKey}.documents.${documentIndex}.title`)}>{text(`${blockKey}.documents.${documentIndex}.title`, item.title || '')}</h3>
-              {item.description && <p {...attrs(`${blockKey}.documents.${documentIndex}.description`)}>{text(`${blockKey}.documents.${documentIndex}.description`, item.description || '')}</p>}
-              <span class="doc-badge" {...attrs(`${blockKey}.documents.${documentIndex}.badge`)}>{text(`${blockKey}.documents.${documentIndex}.badge`, item.badge || 'PDF')}</span>
+              <h3>{item.title || ''}</h3>
+              {item.description && <p>{item.description || ''}</p>}
+              <span class="doc-badge">{item.badge || 'PDF'}</span>
             </div>
           </a>
         ))}

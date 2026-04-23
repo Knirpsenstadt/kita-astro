@@ -20,6 +20,7 @@ if (!page) {
 
 const pageTitle = page?.data.title || 'Seite nicht gefunden';
 const title = cms.text(`pages.${slug}.title`, pageTitle);
+const titleAttrs = slug === 'dokumente' ? {} : cms.attrs(`pages.${slug}.title`);
 const rendered = page ? await render(page) : null;
 const Content = rendered?.Content;
 const hasBody = (page?.body?.trim().length ?? 0) > 0;
@@ -47,7 +48,7 @@ const iconPath = getIconPath(pageIcons[slug], 'book-open');
             <path stroke-linecap="round" stroke-linejoin="round" d={iconPath}></path>
           </svg>
         </div>
-        <h1 class="text-2xl font-bold !mt-0 !mb-0" {...cms.attrs(`pages.${slug}.title`)}>{title}</h1>
+        <h1 class="text-2xl font-bold !mt-0 !mb-0" {...titleAttrs}>{title}</h1>
       </div>
       {hasBody && Content ? <Content /> : <ContentBlocks blocks={page.data.blocks} cms={cms} contentKeyPrefix={`pages.${slug}.blocks`} />}
     </article>

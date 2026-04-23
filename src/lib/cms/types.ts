@@ -9,6 +9,21 @@ export interface CmsSponsor {
   support?: string
 }
 
+export interface CmsDocumentItem {
+  id: string
+  title: string
+  description?: string
+  href: string
+  icon?: string
+  badge?: string
+}
+
+export interface CmsDocumentGroup {
+  id: string
+  heading?: string
+  documents: CmsDocumentItem[]
+}
+
 export type CmsEventType = 'parent' | 'family' | 'child' | 'closure'
 
 export interface CmsEvent {
@@ -22,6 +37,7 @@ export interface CmsEvent {
 export interface CmsStructuredData {
   sponsors: CmsSponsor[]
   carouselImages: string[]
+  documentGroups: CmsDocumentGroup[]
   events: CmsEvent[]
 }
 

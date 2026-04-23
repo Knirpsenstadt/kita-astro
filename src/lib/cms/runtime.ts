@@ -2,7 +2,7 @@ import type { AstroCookies } from 'astro'
 import { getModeFromCookies, getSession } from './auth'
 import { loadCmsStore } from './storage'
 import type { CmsMode } from './types'
-import type { CmsEvent, CmsSponsor } from './types'
+import type { CmsDocumentGroup, CmsEvent, CmsSponsor } from './types'
 
 type ContextLike = {
   cookies: AstroCookies
@@ -17,6 +17,7 @@ export type CmsRuntime = {
   attrs: (key: string) => Record<string, string>
   sponsors: (fallback: CmsSponsor[]) => CmsSponsor[]
   carouselImages: (fallback: string[]) => string[]
+  documentGroups: (fallback: CmsDocumentGroup[]) => CmsDocumentGroup[]
   events: (fallback: CmsEvent[]) => CmsEvent[]
 }
 
@@ -58,6 +59,15 @@ export async function getCmsRuntime(context: ContextLike): Promise<CmsRuntime> {
         return fallback
       }
       return [...sourceData.carouselImages]
+    },
+    documentGroups: (fallback: CmsDocumentGroup[]) => {
+      if (sourceData.documentGroups.length === 0) {
+        return fallback
+      }
+      return sourceData.documentGroups.map((group) => ({
+        ...group,
+        documents: group.documents.map((item) => ({ ...item })),
+      }))
     },
     events: (fallback: CmsEvent[]) => {
       if (sourceData.events.length === 0) {
