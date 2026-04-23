@@ -18,7 +18,7 @@ const eventsData = cms.events(getBaselineEvents());
     </div>
 
     <div class="highlight-box" style="margin-top: 1.5rem;">
-      <span {...cms.attrs('calendar.pageIntro')}>{cms.text('calendar.pageIntro', 'Elterntermine, Familienveranstaltungen, Kinderaktionen und Schliesszeiten im Ueberblick')}</span>
+      <span {...cms.attrs('calendar.pageIntro')}>{cms.text('calendar.pageIntro', 'Elterntermine, Familienveranstaltungen, Kinderaktionen und Schließzeiten im Überblick')}</span>
     </div>
     
     <div id="events-list" data-events-list style="margin-top: 1.5rem;">
@@ -69,14 +69,72 @@ const eventsData = cms.events(getBaselineEvents());
   }
   
   .filter-btn:hover {
-    border-color: var(--brand-200);
-    background: var(--brand-50);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
   }
   
   .filter-btn.active {
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.12);
+  }
+
+  .filter-btn[data-filter="all"] {
+    background: #fff;
+    border-color: var(--border);
+    color: var(--ink-700);
+  }
+
+  .filter-btn.active[data-filter="all"] {
     background: var(--brand-600);
     border-color: var(--brand-600);
-    color: white;
+    color: #fff;
+  }
+
+  .filter-btn[data-filter="parent"] {
+    background: #dbeafe;
+    border-color: #93c5fd;
+    color: #1d4ed8;
+  }
+
+  .filter-btn.active[data-filter="parent"] {
+    background: #bfdbfe;
+    border-color: #60a5fa;
+    color: #1e3a8a;
+  }
+
+  .filter-btn[data-filter="family"] {
+    background: #dcfce7;
+    border-color: #86efac;
+    color: #166534;
+  }
+
+  .filter-btn.active[data-filter="family"] {
+    background: #bbf7d0;
+    border-color: #4ade80;
+    color: #14532d;
+  }
+
+  .filter-btn[data-filter="child"] {
+    background: #ffedd5;
+    border-color: #fdba74;
+    color: #c2410c;
+  }
+
+  .filter-btn.active[data-filter="child"] {
+    background: #fed7aa;
+    border-color: #fb923c;
+    color: #9a3412;
+  }
+
+  .filter-btn[data-filter="closure"] {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    color: #b91c1c;
+  }
+
+  .filter-btn.active[data-filter="closure"] {
+    background: #fecaca;
+    border-color: #f87171;
+    color: #991b1b;
   }
   
   .events-list {
@@ -84,12 +142,10 @@ const eventsData = cms.events(getBaselineEvents());
     gap: 0.75rem;
   }
 
-  .events-note {
-    margin: -0.35rem 0 0.85rem;
-    font-size: 0.8rem;
-    color: var(--muted);
+  .events-section + .events-section {
+    margin-top: 1.5rem;
   }
-  
+
   .event-item {
     display: flex;
     align-items: center;
@@ -102,12 +158,8 @@ const eventsData = cms.events(getBaselineEvents());
   }
 
   .event-item.is-past {
-    opacity: var(--past-fade, 0.78);
-  }
-
-  .event-item.is-past .event-date,
-  .event-item.is-past .event-type {
-    filter: saturate(0.82);
+    background: #f9fafb;
+    border-color: #d1d5db;
   }
   
   .event-item:hover {
@@ -116,7 +168,7 @@ const eventsData = cms.events(getBaselineEvents());
   }
 
   .event-item.is-past:hover {
-    opacity: min(calc(var(--past-fade, 0.78) + 0.08), 1);
+    transform: translateX(4px);
   }
   
   .event-date {
@@ -172,6 +224,26 @@ const eventsData = cms.events(getBaselineEvents());
   .event-title,
   .event-duration {
     overflow-wrap: anywhere;
+  }
+
+  .event-item.is-past .event-date {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+  }
+
+  .event-item.is-past .event-date .day {
+    color: #374151;
+  }
+
+  .event-item.is-past .event-date .month,
+  .event-item.is-past .event-title,
+  .event-item.is-past .event-duration {
+    color: #6b7280;
+  }
+
+  .event-item.is-past .event-type {
+    filter: grayscale(1);
+    border-color: #d1d5db;
   }
   
   .event-type.closure {

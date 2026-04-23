@@ -1,6 +1,6 @@
 (function(){
   const monthNames = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
-  const MAX_PAST_EVENTS = 10;
+  const MAX_PAST_EVENTS = 3;
   
   function parseYMD(s){
     if(!s) return null;
@@ -36,10 +36,6 @@
     return parseYMD(event.end || event.start);
   }
 
-  function clamp(value, min, max){
-    return Math.min(max, Math.max(min, value));
-  }
-  
   function buildEventsList(container){
     const dataEl = container.querySelector('[data-events]');
     if(!dataEl) return;
@@ -86,14 +82,12 @@
       if(!list.length) return '';
 
       const isPast = !!options.isPast;
-      const stepCount = Math.max(list.length - 1, 1);
       
-      const items = list.map((e, index) => {
+      const items = list.map((e) => {
         const s = parseYMD(e.start);
         const type = e.type || 'parent';
-        const fade = isPast ? clamp(1 - (index / stepCount) * 0.45, 0.55, 1) : 1;
         return `
-          <div class="event-item${isPast ? ' is-past' : ''}" data-type="${type}" style="--past-fade:${fade.toFixed(2)}">
+          <div class="event-item${isPast ? ' is-past' : ''}" data-type="${type}">
             <div class="event-date">
               <div class="day">${s.getDate()}</div>
               <div class="month">${monthNames[s.getMonth()]}</div>
@@ -110,7 +104,6 @@
       return `
         <div class="events-section">
           ${title ? `<h3 class="text-lg font-semibold mb-3">${title}</h3>` : ''}
-          ${isPast ? `<p class="events-note">Nur die letzten ${MAX_PAST_EVENTS} vergangenen Einträge, von neu nach alt zunehmend abgeschwächt.</p>` : ''}
           <div class="events-list">${items}</div>
         </div>
       `;
