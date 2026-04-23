@@ -38,6 +38,7 @@
   "draftData": {
     "sponsors": [],
     "carouselImages": [],
+    "documentGroups": [],
     "events": [
       {
         "id": "elternkennenlerncaf-2025-09-10",
@@ -273,6 +274,7 @@
   "publishedData": {
     "sponsors": [],
     "carouselImages": [],
+    "documentGroups": [],
     "events": [
       {
         "id": "elternkennenlerncaf-2025-09-10",
@@ -505,6 +507,6 @@
       }
     ]
   },
-  "updatedAt": "2026-04-23T16:01:05.315Z",
-  "publishedAt": "2026-04-23T16:01:05.315Z"
+  "updatedAt": "2026-04-23T16:05:30.367Z",
+  "publishedAt": "2026-04-23T16:05:30.367Z"
 }
