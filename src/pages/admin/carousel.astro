@@ -184,7 +184,7 @@ const csrfToken = session.csrf
       setStatus('Keine Live-Karussellbilder gefunden.');
       return;
     }
-    if (!window.confirm('Entwurf mit Live-Daten ersetzen? Nicht gespeicherte Aenderungen gehen verloren.')) return;
+    if (!window.confirm('Entwurf mit Live-Daten ersetzen? Nicht gespeicherte Änderungen gehen verloren.')) return;
     state.carouselImages = [...state.publishedCarouselImages];
     state.source = 'published';
     setSourceHint();
@@ -197,7 +197,7 @@ const csrfToken = session.csrf
       setStatus('Keine Website-Standarddaten gefunden.');
       return;
     }
-    if (!window.confirm('Entwurf mit Website-Standard ersetzen? Nicht gespeicherte Aenderungen gehen verloren.')) return;
+    if (!window.confirm('Entwurf mit Website-Standard ersetzen? Nicht gespeicherte Änderungen gehen verloren.')) return;
     state.carouselImages = [...state.baselineCarouselImages];
     state.source = 'baseline';
     setSourceHint();

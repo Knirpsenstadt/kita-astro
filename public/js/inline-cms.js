@@ -148,7 +148,7 @@
           moveCaretToEnd(editable);
         }
 
-        setStatus('Link deaktiviert waehrend Bearbeitung. Mit Cmd/Ctrl+Klick oeffnen.', 'muted');
+        setStatus('Link deaktiviert während Bearbeitung. Mit Cmd/Ctrl+Klick öffnen.', 'muted');
       },
       true
     );

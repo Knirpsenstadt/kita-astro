@@ -65,7 +65,7 @@ const csrfToken = session.csrf
     const node = document.getElementById('source-hint');
     if (!node) return;
     const label = state.source === 'baseline' ? 'Website-Standard' : state.source === 'published' ? 'Live' : 'Entwurf';
-    node.textContent = `Aktuelle Quelle: ${label} (${state.sponsors.length} Eintraege)`;
+    node.textContent = `Aktuelle Quelle: ${label} (${state.sponsors.length} Einträge)`;
   }
 
   function markDraftSource() {
@@ -134,7 +134,7 @@ const csrfToken = session.csrf
 
     container.querySelector('[data-action="remove"]')?.addEventListener('click', () => {
       const sponsorName = (sponsor.name || 'diesen Sponsor').trim();
-      if (!window.confirm(`Sponsor "${sponsorName}" wirklich loeschen?`)) return;
+      if (!window.confirm(`Sponsor "${sponsorName}" wirklich löschen?`)) return;
       state.sponsors.splice(index, 1);
       markDraftSource();
       renderSponsors();
@@ -254,7 +254,7 @@ const csrfToken = session.csrf
       setStatus('Keine Live-Sponsoren gefunden.');
       return;
     }
-    if (!window.confirm('Entwurf mit Live-Daten ersetzen? Nicht gespeicherte Aenderungen gehen verloren.')) return;
+    if (!window.confirm('Entwurf mit Live-Daten ersetzen? Nicht gespeicherte Änderungen gehen verloren.')) return;
     state.sponsors = state.publishedSponsors.map((item) => ({ ...item }));
     state.source = 'published';
     setSourceHint();
@@ -267,7 +267,7 @@ const csrfToken = session.csrf
       setStatus('Keine Website-Standarddaten gefunden.');
       return;
     }
-    if (!window.confirm('Entwurf mit Website-Standard ersetzen? Nicht gespeicherte Aenderungen gehen verloren.')) return;
+    if (!window.confirm('Entwurf mit Website-Standard ersetzen? Nicht gespeicherte Änderungen gehen verloren.')) return;
     state.sponsors = state.baselineSponsors.map((item) => ({ ...item }));
     state.source = 'baseline';
     setSourceHint();

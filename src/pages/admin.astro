@@ -10,7 +10,7 @@ const csrfToken = session?.csrf || ''
 <BaseLayout title="Admin" description="Inline CMS Login">
   <article class="admin-shell">
     <h1>Inline CMS</h1>
-    <p class="admin-intro">Bitte waehle den Bereich, den du bearbeiten moechtest.</p>
+    <p class="admin-intro">Bitte wähle den Bereich, den du bearbeiten möchtest.</p>
 
     {session ? (
       <>
@@ -100,7 +100,7 @@ const csrfToken = session?.csrf || ''
       const passwordInput = document.getElementById('password');
       const password = passwordInput?.value || '';
 
-      status.textContent = 'Anmeldung laeuft ...';
+      status.textContent = 'Anmeldung läuft ...';
       status.classList.remove('error');
 
       const response = await fetch('/api/admin/login', {

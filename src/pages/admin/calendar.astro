@@ -15,9 +15,9 @@ const csrfToken = session.csrf
 <BaseLayout title="Admin - Kalender" description="Kalenderverwaltung">
   <article class="admin-shell">
     <div class="admin-head">
-      <h1>Kalender Eintraege</h1>
+      <h1>Kalender Einträge</h1>
       <div class="admin-actions">
-        <a class="admin-btn subtle" href="/admin">Zurueck</a>
+        <a class="admin-btn subtle" href="/admin">Zurück</a>
         <button type="button" id="load-live-btn" class="admin-btn subtle">Live-Daten laden</button>
         <button type="button" id="load-baseline-btn" class="admin-btn subtle">Website-Standard laden</button>
         <button type="button" id="save-events-btn" class="admin-btn">Entwurf speichern</button>
@@ -112,8 +112,8 @@ const csrfToken = session.csrf
     if (!node) return;
     const filtered = state.filterType !== 'all' || state.filterYear !== 'all';
     node.textContent = filtered
-      ? `${visibleCount} von ${state.events.length} Eintraegen sichtbar`
-      : `${state.events.length} Eintraege`;
+      ? `${visibleCount} von ${state.events.length} Einträgen sichtbar`
+      : `${state.events.length} Einträge`;
   }
 
   function markDraftSource() {
@@ -251,7 +251,7 @@ const csrfToken = session.csrf
 
     container.querySelector('[data-action="remove"]')?.addEventListener('click', () => {
       const label = (entry.label || 'diesen Termin').trim();
-      if (!window.confirm(`Termin "${label}" wirklich loeschen?`)) return;
+      if (!window.confirm(`Termin "${label}" wirklich löschen?`)) return;
       state.events.splice(index, 1);
       markDraftSource();
       renderEvents();
@@ -272,7 +272,7 @@ const csrfToken = session.csrf
     if (state.events.length === 0) {
       const empty = document.createElement('p');
       empty.className = 'empty-state';
-      empty.textContent = 'Keine Kalender-Eintraege im Entwurf.';
+      empty.textContent = 'Keine Kalender-Einträge im Entwurf.';
       list.appendChild(empty);
       return;
     }
@@ -280,7 +280,7 @@ const csrfToken = session.csrf
     if (visibleEntries.length === 0) {
       const empty = document.createElement('p');
       empty.className = 'empty-state';
-      empty.textContent = 'Keine Eintraege fuer den aktuellen Filter.';
+      empty.textContent = 'Keine Einträge fuer den aktuellen Filter.';
       list.appendChild(empty);
       return;
     }
@@ -290,7 +290,7 @@ const csrfToken = session.csrf
       row.className = `event-row type-${escapeHtml(entry.type || 'event')}`;
       row.innerHTML =
         '<input class="field-label" data-field="label" type="text" aria-label="Bezeichnung" value="' + escapeHtml(entry.label) + '" placeholder="Bezeichnung" />' +
-        '<div class="type-toggle" role="group" aria-label="Typ auswaehlen">' +
+        '<div class="type-toggle" role="group" aria-label="Typ auswählen">' +
           '<button type="button" class="type-pill event' + (entry.type === 'event' ? ' active' : '') + '" data-set-type="event">Termin</button>' +
           '<button type="button" class="type-pill closure' + (entry.type === 'closure' ? ' active' : '') + '" data-set-type="closure">Schliesszeit</button>' +
           '<button type="button" class="type-pill festivity' + (entry.type === 'festivity' ? ' active' : '') + '" data-set-type="festivity">Fest</button>' +
@@ -365,7 +365,7 @@ const csrfToken = session.csrf
       setStatus('Keine Live-Termine gefunden.');
       return;
     }
-    if (!window.confirm('Entwurf mit Live-Daten ersetzen? Nicht gespeicherte Aenderungen gehen verloren.')) return;
+    if (!window.confirm('Entwurf mit Live-Daten ersetzen? Nicht gespeicherte Änderungen gehen verloren.')) return;
     state.events = sortEvents(state.publishedEvents.map((item) => ({ ...item })));
     state.source = 'published';
     setSourceHint();
@@ -378,7 +378,7 @@ const csrfToken = session.csrf
       setStatus('Keine Website-Standarddaten gefunden.');
       return;
     }
-    if (!window.confirm('Entwurf mit Website-Standard ersetzen? Nicht gespeicherte Aenderungen gehen verloren.')) return;
+    if (!window.confirm('Entwurf mit Website-Standard ersetzen? Nicht gespeicherte Änderungen gehen verloren.')) return;
     state.events = sortEvents(state.baselineEvents.map((item) => ({ ...item })));
     state.source = 'baseline';
     setSourceHint();
