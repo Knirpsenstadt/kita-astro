@@ -301,12 +301,6 @@
         "start": "2026-04-22"
       },
       {
-        "id": "entry-1776946716130-2nymds",
-        "label": "Test",
-        "type": "parent",
-        "start": "2026-06-21"
-      },
-      {
         "id": "elternkennenlerncaf-2026-09-09",
         "label": "Elternkennenlerncafé",
         "type": "parent",
@@ -501,6 +495,6 @@
       }
     ]
   },
-  "updatedAt": "2026-04-23T16:05:51.499Z",
-  "publishedAt": "2026-04-23T16:05:30.367Z"
+  "updatedAt": "2026-04-23T16:05:54.060Z",
+  "publishedAt": "2026-04-23T16:05:54.060Z"
 }
