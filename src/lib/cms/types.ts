@@ -9,7 +9,7 @@ export interface CmsSponsor {
   support?: string
 }
 
-export type CmsEventType = 'event' | 'closure' | 'festivity'
+export type CmsEventType = 'parent' | 'family' | 'child' | 'closure'
 
 export interface CmsEvent {
   id: string

@@ -30,7 +30,7 @@
     const list = Array.isArray(data) ? data : (data && data.events) ? data.events : [];
     return (list||[]).map(e=>({
       label: e.label,
-      type: e.type || 'event',
+      type: e.type || 'parent',
       start: parseYMD(e.start),
       end: e.end ? parseYMD(e.end) : parseYMD(e.start)
     }));
@@ -78,7 +78,7 @@
 
     const grid = document.createElement('div'); grid.className='cal-grid';
   const legend = document.createElement('div'); legend.className='cal-legend';
-  legend.innerHTML = '<span class="badge closed"></span>Schließzeit <span class="badge festivity"></span>Fest <span class="badge event"></span>Termin';
+  legend.innerHTML = '<span class="badge closed"></span>Schließzeit <span class="badge parent"></span>Elterntermin <span class="badge family"></span>Familienveranstaltung <span class="badge child"></span>Kinderaktion';
 
     container.innerHTML='';
     container.append(header, grid, legend);
@@ -105,11 +105,12 @@
         if(fmtDate(d)===fmtDate(today)) cell.classList.add('today');
         const hits = ranges.filter(r=>inRange(d,r));
         if(hits.length){
-          // Precedence: closure > festivity > event
+          // Precedence: closure > parent > family > child
           let dayType = null;
           if(hits.some(h=>h.type==='closure')) dayType = 'closed'; // CSS uses .closed
-          else if(hits.some(h=>h.type==='festivity')) dayType = 'festivity';
-          else if(hits.some(h=>h.type==='event')) dayType = 'event';
+          else if(hits.some(h=>h.type==='parent')) dayType = 'parent';
+          else if(hits.some(h=>h.type==='family')) dayType = 'family';
+          else if(hits.some(h=>h.type==='child')) dayType = 'child';
           if(dayType) cell.classList.add(dayType);
           cell.title = hits.map(h=>h.label).join(' • ');
           cell.addEventListener('click', ()=> showDetails(d, hits));
@@ -172,8 +173,10 @@
       const list = items.map(i => {
         let t;
         if(i.type==='closure') t = 'Geschlossen';
-        else if(i.type==='festivity') t = 'Fest';
-        else t = 'Termin';
+        else if(i.type==='parent') t = 'Elterntermin';
+        else if(i.type==='family') t = 'Familienveranstaltung';
+        else if(i.type==='child') t = 'Kinderaktion';
+        else t = 'Eintrag';
         return `<li><span class="pill ${i.type}">${t}</span> ${i.label}</li>`;
       }).join('');
       detailsEl.innerHTML = `<div class="details-head">${header}</div><ul class="details-list">${list}</ul>`;

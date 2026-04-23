@@ -2,13 +2,22 @@ import rawBaselineEvents from '../../content/events/events.json'
 import { toYMD } from '../../utils/date'
 import type { CmsEvent, CmsEventType } from './types'
 
-const EVENT_TYPES: CmsEventType[] = ['event', 'closure', 'festivity']
+const EVENT_TYPES: CmsEventType[] = ['parent', 'family', 'child', 'closure']
+const LEGACY_TYPE_MAP: Record<string, CmsEventType> = {
+  event: 'parent',
+  festivity: 'family',
+}
 
 function normalizeType(value: unknown): CmsEventType {
   if (typeof value === 'string' && EVENT_TYPES.includes(value as CmsEventType)) {
     return value as CmsEventType
   }
-  return 'event'
+
+  if (typeof value === 'string' && LEGACY_TYPE_MAP[value]) {
+    return LEGACY_TYPE_MAP[value]
+  }
+
+  return 'parent'
 }
 
 function toEventId(value: string, index: number): string {

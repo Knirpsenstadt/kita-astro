@@ -25,7 +25,7 @@ const csrfToken = session.csrf
       </div>
     </div>
 
-    <p class="admin-intro">Sortierung automatisch nach Typ und Datum. Kompakte Tabellenansicht fuer mehr Eintraege pro Bildschirm.</p>
+    <p class="admin-intro">Sortierung automatisch nach Typ und Datum. Elterntermine, Familienveranstaltungen, Kinderaktionen und Schließzeiten getrennt pflegen.</p>
     <p id="source-hint" class="source-hint"></p>
     <p id="admin-status" class="admin-state" aria-live="polite"></p>
 
@@ -33,35 +33,67 @@ const csrfToken = session.csrf
       <div class="toolbar-filters">
         <div class="type-filter" role="group" aria-label="Typ Filter">
           <button type="button" class="filter-chip" data-type-filter="all">Alle</button>
-          <button type="button" class="filter-chip" data-type-filter="event">Termin</button>
-          <button type="button" class="filter-chip" data-type-filter="closure">Schliesszeit</button>
-          <button type="button" class="filter-chip" data-type-filter="festivity">Fest</button>
+          <button type="button" class="filter-chip" data-type-filter="parent">Elterntermin</button>
+          <button type="button" class="filter-chip" data-type-filter="family">Familienveranstaltung</button>
+          <button type="button" class="filter-chip" data-type-filter="child">Kinderaktion</button>
+          <button type="button" class="filter-chip" data-type-filter="closure">Schließzeit</button>
         </div>
 
-        <label class="year-filter" for="filter-year">
-          Jahr
-          <select id="filter-year">
-            <option value="all">Alle Jahre</option>
-          </select>
-        </label>
-
-        <button type="button" id="clear-filters-btn" class="admin-btn subtle small">Filter zuruecksetzen</button>
+        <button type="button" id="clear-filters-btn" class="admin-btn subtle small">Filter zurücksetzen</button>
         <span id="filter-hint" class="filter-hint"></span>
       </div>
 
-      <button type="button" id="add-event-btn" class="admin-btn">Termin hinzufuegen</button>
+      <button type="button" id="add-event-btn" class="admin-btn">Termin hinzufügen</button>
     </div>
 
-    <div id="events-list" class="cms-list"></div>
+    <div class="admin-calendar-layout">
+      <section class="admin-calendar-panel">
+        <div class="calendar-board-head">
+          <div>
+            <h2 id="calendar-range-label" class="calendar-board-title">Kalender</h2>
+            <p id="calendar-mode-note" class="calendar-board-note" hidden>Erstellmodus: Der erste Klick setzt den Start, der zweite Klick das Ende.</p>
+          </div>
+          <div class="calendar-nav">
+            <button type="button" id="calendar-prev-btn" class="admin-btn subtle small" aria-label="Vorherige Monate">‹</button>
+            <button type="button" id="calendar-today-btn" class="admin-btn subtle small">Heute</button>
+            <button type="button" id="calendar-next-btn" class="admin-btn subtle small" aria-label="Nächste Monate">›</button>
+          </div>
+        </div>
+
+        <div id="events-list" class="admin-month-grid"></div>
+
+      </section>
+
+      <aside id="calendar-inspector" class="calendar-inspector"></aside>
+    </div>
   </article>
 </BaseLayout>
 
-<script define:vars={{ csrfToken }}>
+<script is:inline data-astro-rerun define:vars={{ csrfToken }}>
   const TYPE_ORDER = {
-    event: 0,
-    closure: 1,
-    festivity: 2,
+    parent: 0,
+    family: 1,
+    child: 2,
+    closure: 3,
   };
+
+  const TYPE_OPTIONS = [
+    { value: 'parent', label: 'Elterntermin' },
+    { value: 'family', label: 'Familienveranstaltung' },
+    { value: 'child', label: 'Kinderaktion' },
+    { value: 'closure', label: 'Schließzeit' },
+  ];
+
+  const TYPE_META = {
+    parent: { label: 'Elterntermin', className: 'type-parent' },
+    family: { label: 'Familienveranstaltung', className: 'type-family' },
+    child: { label: 'Kinderaktion', className: 'type-child' },
+    closure: { label: 'Schließzeit', className: 'type-closure' },
+  };
+
+  const MONTH_NAMES = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+  const WEEKDAY_NAMES = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+  const MONTHS_PER_PAGE = 3;
 
   const state = {
     events: [],
@@ -69,7 +101,12 @@ const csrfToken = session.csrf
     baselineEvents: [],
     source: 'draft',
     filterType: 'all',
-    filterYear: 'all',
+    viewYear: new Date().getFullYear(),
+    viewMonth: new Date().getMonth(),
+    selectedDate: todayYmd(),
+    selectedEntryId: '',
+    createDraft: null,
+    draftStep: 'pick_start',
   };
 
   function createId(prefix) {
@@ -78,10 +115,59 @@ const csrfToken = session.csrf
 
   function todayYmd() {
     const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
+    return formatDateToYmd(now);
+  }
+
+  function formatDateToYmd(value) {
+    const y = value.getFullYear();
+    const m = String(value.getMonth() + 1).padStart(2, '0');
+    const d = String(value.getDate()).padStart(2, '0');
     return `${y}-${m}-${d}`;
+  }
+
+  function parseYmd(value) {
+    if (typeof value !== 'string') return null;
+    const match = value.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return null;
+    return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  }
+
+  function formatLongDate(value) {
+    const date = parseYmd(value);
+    if (!date) return 'Kein Datum';
+    return date.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+
+  function formatShortDate(value) {
+    const date = parseYmd(value);
+    if (!date) return 'TT.MM.JJJJ';
+    return date.toLocaleDateString('de-DE');
+  }
+
+  function formatDateRange(start, end) {
+    if (!start) return 'Noch kein Datum gesetzt';
+    if (!end || end === start) return formatShortDate(start);
+    return `${formatShortDate(start)} - ${formatShortDate(end)}`;
+  }
+
+  function addMonths(year, month, delta) {
+    const date = new Date(year, month + delta, 1);
+    return { year: date.getFullYear(), month: date.getMonth() };
+  }
+
+  function compareYmd(a, b) {
+    return String(a || '').localeCompare(String(b || ''));
+  }
+
+  function buildDraft(defaultDate = '') {
+    const presetType = state.filterType !== 'all' ? state.filterType : 'parent';
+    return {
+      id: createId('entry'),
+      label: '',
+      type: presetType,
+      start: defaultDate,
+      end: '',
+    };
   }
 
   function escapeHtml(value) {
@@ -104,13 +190,13 @@ const csrfToken = session.csrf
     const node = document.getElementById('source-hint');
     if (!node) return;
     const label = state.source === 'baseline' ? 'Website-Standard' : state.source === 'published' ? 'Live' : 'Entwurf';
-    node.textContent = `Aktuelle Quelle: ${label} (${state.events.length} Eintraege)`;
+    node.textContent = `Aktuelle Quelle: ${label} (${state.events.length} Einträge)`;
   }
 
   function setFilterHint(visibleCount) {
     const node = document.getElementById('filter-hint');
     if (!node) return;
-    const filtered = state.filterType !== 'all' || state.filterYear !== 'all';
+    const filtered = state.filterType !== 'all';
     node.textContent = filtered
       ? `${visibleCount} von ${state.events.length} Einträgen sichtbar`
       : `${state.events.length} Einträge`;
@@ -119,38 +205,6 @@ const csrfToken = session.csrf
   function markDraftSource() {
     state.source = 'draft';
     setSourceHint();
-  }
-
-  function yearFromDate(value) {
-    if (typeof value !== 'string') return '';
-    const match = value.trim().match(/^(\d{4})-\d{2}-\d{2}$/);
-    return match ? match[1] : '';
-  }
-
-  function collectYears() {
-    const years = new Set();
-    state.events.forEach((entry) => {
-      const startYear = yearFromDate(entry.start);
-      const endYear = yearFromDate(entry.end || '');
-      if (startYear) years.add(startYear);
-      if (endYear) years.add(endYear);
-    });
-    return Array.from(years).sort((a, b) => Number(a) - Number(b));
-  }
-
-  function syncYearFilterOptions() {
-    const select = document.getElementById('filter-year');
-    if (!select) return;
-
-    const years = collectYears();
-    if (state.filterYear !== 'all' && !years.includes(state.filterYear)) {
-      state.filterYear = 'all';
-    }
-
-    select.innerHTML =
-      '<option value="all">Alle Jahre</option>' +
-      years.map((year) => `<option value="${escapeHtml(year)}">${escapeHtml(year)}</option>`).join('');
-    select.value = state.filterYear;
   }
 
   function syncTypeFilterButtons() {
@@ -191,14 +245,6 @@ const csrfToken = session.csrf
       return false;
     }
 
-    if (state.filterYear !== 'all') {
-      const startYear = yearFromDate(entry.start);
-      const endYear = yearFromDate(entry.end || '');
-      if (startYear !== state.filterYear && endYear !== state.filterYear) {
-        return false;
-      }
-    }
-
     return true;
   }
 
@@ -218,92 +264,466 @@ const csrfToken = session.csrf
     return result;
   }
 
-  function bindEventRow(container, index) {
-    const entry = state.events[index];
+  function renderTypeOptions(selectedType) {
+    return TYPE_OPTIONS.map((option) => {
+      const selected = option.value === selectedType ? ' selected' : '';
+      return `<option value="${option.value}"${selected}>${escapeHtml(option.label)}</option>`;
+    }).join('');
+  }
+
+  function renderTypeChips(selectedType, mode, entryId = '') {
+    return (
+      `<div class="type-chip-group" role="group" aria-label="Typ auswählen">` +
+        TYPE_OPTIONS.map((option) => {
+          const meta = TYPE_META[option.value] || TYPE_META.parent;
+          const active = option.value === selectedType ? ' active' : '';
+          const target = mode === 'draft'
+            ? `data-draft-type="${option.value}"`
+            : `data-entry-type="${option.value}" data-entry-id="${escapeHtml(entryId)}"`;
+          return `<button type="button" class="type-chip ${meta.className}${active}" ${target}>${escapeHtml(option.label)}</button>`;
+        }).join('') +
+      `</div>`
+    );
+  }
+
+  function getEntryById(id) {
+    return state.events.find((entry) => entry.id === id) || null;
+  }
+
+  function getEntryIndexById(id) {
+    return state.events.findIndex((entry) => entry.id === id);
+  }
+
+  function normalizeEntryRange(entry) {
+    if (entry.start && entry.end && compareYmd(entry.end, entry.start) < 0) {
+      const nextStart = entry.end;
+      entry.end = entry.start;
+      entry.start = nextStart;
+    }
+  }
+
+  function updateEntryField(id, field, value) {
+    const entry = getEntryById(id);
     if (!entry) return;
+    entry[field] = value;
+    normalizeEntryRange(entry);
+    markDraftSource();
+    renderEvents();
+  }
 
-    container.querySelector('[data-field="label"]')?.addEventListener('input', (event) => {
-      entry.label = event.currentTarget.value;
-      markDraftSource();
+  function removeEntry(id) {
+    const index = getEntryIndexById(id);
+    if (index === -1) return;
+    const label = (state.events[index].label || 'diesen Eintrag').trim();
+    if (!window.confirm(`Eintrag "${label}" wirklich löschen?`)) return;
+    state.events.splice(index, 1);
+    if (state.selectedEntryId === id) {
+      state.selectedEntryId = '';
+    }
+    markDraftSource();
+    renderEvents();
+  }
+
+  function getEntriesForDay(ymd) {
+    return getVisibleEntries().filter(({ entry }) => {
+      const start = entry.start || '';
+      const end = entry.end || entry.start || '';
+      return !!start && compareYmd(ymd, start) >= 0 && compareYmd(ymd, end) <= 0;
     });
+  }
 
-    container.querySelector('[data-field="start"]')?.addEventListener('change', (event) => {
-      entry.start = event.currentTarget.value;
-      markDraftSource();
-      renderEvents();
+  function getMarkerTypes(items) {
+    return Array.from(new Set(items.map(({ entry }) => entry.type)))
+      .sort((a, b) => (TYPE_ORDER[a] ?? 99) - (TYPE_ORDER[b] ?? 99))
+      .slice(0, 3);
+  }
+
+  function getDominantType(items) {
+    const marker = getMarkerTypes(items)[0];
+    return marker ? `type-${marker}` : '';
+  }
+
+  function isDraftDay(ymd) {
+    if (!state.createDraft?.start) return false;
+    const draftStart = state.createDraft.start;
+    const draftEnd = state.createDraft.end || draftStart;
+    return compareYmd(ymd, draftStart) >= 0 && compareYmd(ymd, draftEnd) <= 0;
+  }
+
+  function ensureUiState(visibleEntries) {
+    const visibleIds = new Set(visibleEntries.map(({ entry }) => entry.id));
+    if (state.selectedEntryId && !visibleIds.has(state.selectedEntryId)) {
+      state.selectedEntryId = '';
+    }
+    if (!state.selectedDate) {
+      state.selectedDate = todayYmd();
+    }
+  }
+
+  function getRangeLabel() {
+    const start = new Date(state.viewYear, state.viewMonth, 1);
+    const end = new Date(state.viewYear, state.viewMonth + MONTHS_PER_PAGE - 1, 1);
+    const startLabel = `${MONTH_NAMES[start.getMonth()]} ${start.getFullYear()}`;
+    const endLabel = `${MONTH_NAMES[end.getMonth()]} ${end.getFullYear()}`;
+    return startLabel === endLabel ? startLabel : `${startLabel} - ${endLabel}`;
+  }
+
+  function monthGridDates(year, month) {
+    const first = new Date(year, month, 1);
+    const leadingEmpty = (first.getDay() + 6) % 7;
+    const totalDays = new Date(year, month + 1, 0).getDate();
+    const cells = Array.from({ length: leadingEmpty }, () => null);
+    for (let day = 1; day <= totalDays; day += 1) {
+      cells.push(new Date(year, month, day));
+    }
+    return cells;
+  }
+
+  function renderMonthCard(year, month) {
+    const dates = monthGridDates(year, month);
+    const label = `${MONTH_NAMES[month]} ${year}`;
+    const cells = dates.map((date) => {
+      if (!date) {
+        return '<span class="admin-day-spacer" aria-hidden="true"></span>';
+      }
+      const ymd = formatDateToYmd(date);
+      const items = getEntriesForDay(ymd);
+      const weekend = date.getDay() === 0 || date.getDay() === 6 ? ' is-weekend' : '';
+      const selected = state.selectedDate === ymd ? ' is-selected' : '';
+      const draft = isDraftDay(ymd) ? ' is-draft' : '';
+      const dominantType = items.length ? ` ${getDominantType(items)}` : '';
+      const markers = getMarkerTypes(items)
+        .map((type) => `<span class="day-marker ${type}"></span>`)
+        .join('');
+      const count = items.length > 1 ? `<span class="day-count">${items.length}</span>` : '';
+      return (
+        `<button type="button" class="admin-day${weekend}${selected}${draft}${dominantType}" data-day="${ymd}">` +
+          `<span class="day-number">${date.getDate()}</span>` +
+          `${count}` +
+          `<span class="day-markers">${markers}</span>` +
+        `</button>`
+      );
+    }).join('');
+
+    return (
+      `<section class="admin-month-card">` +
+        `<div class="admin-month-title">${label}</div>` +
+        `<div class="admin-weekdays">${WEEKDAY_NAMES.map((name) => `<span>${name}</span>`).join('')}</div>` +
+        `<div class="admin-days">${cells}</div>` +
+      `</section>`
+    );
+  }
+
+  function bindCalendarEvents() {
+    document.querySelectorAll('[data-day]').forEach((button) => {
+      button.addEventListener('click', () => handleDayClick(button.dataset.day || ''));
     });
+  }
 
-    container.querySelector('[data-field="end"]')?.addEventListener('change', (event) => {
-      entry.end = event.currentTarget.value;
-      markDraftSource();
-      renderEvents();
-    });
+  function renderCalendar() {
+    const list = document.getElementById('events-list');
+    const rangeLabel = document.getElementById('calendar-range-label');
+    if (!list) return;
 
-    container.querySelectorAll('[data-set-type]').forEach((button) => {
+    rangeLabel.textContent = getRangeLabel();
+    list.innerHTML = Array.from({ length: MONTHS_PER_PAGE }, (_, index) => {
+      const next = addMonths(state.viewYear, state.viewMonth, index);
+      return renderMonthCard(next.year, next.month);
+    }).join('');
+    bindCalendarEvents();
+  }
+
+  function bindInspectorEvents() {
+    const inspector = document.getElementById('calendar-inspector');
+    if (!inspector) return;
+
+    inspector.querySelectorAll('[data-entry-select]').forEach((button) => {
       button.addEventListener('click', () => {
-        const type = button.dataset.setType || 'event';
-        if (entry.type === type) return;
-        entry.type = type;
-        markDraftSource();
+        state.selectedEntryId = button.dataset.entrySelect || '';
+        state.createDraft = null;
         renderEvents();
       });
     });
 
-    container.querySelector('[data-action="remove"]')?.addEventListener('click', () => {
-      const label = (entry.label || 'diesen Termin').trim();
-      if (!window.confirm(`Termin "${label}" wirklich löschen?`)) return;
-      state.events.splice(index, 1);
-      markDraftSource();
+    inspector.querySelector('[data-action="cancel-create"]')?.addEventListener('click', () => {
+      state.createDraft = null;
+      state.draftStep = 'pick_start';
       renderEvents();
+    });
+
+    inspector.querySelector('[data-action="save-create"]')?.addEventListener('click', () => {
+      const draft = state.createDraft;
+      if (!draft) return;
+      const label = draft.label.trim();
+      if (!label || !draft.start) {
+        setStatus('Neuer Eintrag braucht mindestens Bezeichnung und Startdatum.', true);
+        return;
+      }
+      const createdEntry = {
+        id: draft.id,
+        label,
+        type: draft.type || 'parent',
+        start: draft.start,
+        end: draft.end || '',
+      };
+      normalizeEntryRange(createdEntry);
+      state.events.push(createdEntry);
+      state.events = sortEvents(state.events);
+      state.selectedEntryId = createdEntry.id;
+      state.selectedDate = createdEntry.start;
+      state.createDraft = null;
+      state.draftStep = 'pick_start';
+      markDraftSource();
+      setStatus('Neuer Eintrag angelegt.');
+      renderEvents();
+    });
+
+    inspector.querySelector('[data-action="clear-draft-range"]')?.addEventListener('click', () => {
+      if (!state.createDraft) return;
+      state.createDraft.start = '';
+      state.createDraft.end = '';
+      state.draftStep = 'pick_start';
+      renderEvents();
+    });
+
+    inspector.querySelectorAll('[data-draft-field]').forEach((field) => {
+      field.addEventListener('input', (event) => {
+        if (!state.createDraft) return;
+        const key = event.currentTarget.dataset.draftField;
+        state.createDraft[key] = event.currentTarget.value;
+      });
+      field.addEventListener('change', (event) => {
+        if (!state.createDraft) return;
+        const key = event.currentTarget.dataset.draftField;
+        state.createDraft[key] = event.currentTarget.value;
+        normalizeEntryRange(state.createDraft);
+        renderEvents();
+      });
+    });
+
+    inspector.querySelectorAll('[data-draft-type]').forEach((button) => {
+      button.addEventListener('click', () => {
+        if (!state.createDraft) return;
+        state.createDraft.type = button.dataset.draftType || 'parent';
+        renderEvents();
+      });
+    });
+
+    inspector.querySelectorAll('[data-entry-field]').forEach((field) => {
+      field.addEventListener('input', (event) => {
+        const id = event.currentTarget.dataset.entryId || '';
+        const key = event.currentTarget.dataset.entryField;
+        if (!id || !key) return;
+        const entry = getEntryById(id);
+        if (!entry) return;
+        entry[key] = event.currentTarget.value;
+        markDraftSource();
+      });
+      field.addEventListener('change', (event) => {
+        const id = event.currentTarget.dataset.entryId || '';
+        const key = event.currentTarget.dataset.entryField;
+        if (!id || !key) return;
+        updateEntryField(id, key, event.currentTarget.value);
+      });
+    });
+
+    inspector.querySelectorAll('[data-entry-type]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const id = button.dataset.entryId || '';
+        const type = button.dataset.entryType || 'parent';
+        if (!id) return;
+        updateEntryField(id, 'type', type);
+      });
+    });
+
+    inspector.querySelector('[data-action="clear-selection"]')?.addEventListener('click', () => {
+      state.selectedEntryId = '';
+      renderEvents();
+    });
+
+    inspector.querySelector('[data-action="remove-entry"]')?.addEventListener('click', () => {
+      const id = inspector.querySelector('[data-action="remove-entry"]').dataset.entryId || '';
+      if (id) {
+        removeEntry(id);
+      }
     });
   }
 
-  function renderEvents() {
-    const list = document.getElementById('events-list');
-    if (!list) return;
+  function renderDayInspector() {
+    const inspector = document.getElementById('calendar-inspector');
+    if (!inspector) return;
+    const selectedDate = state.selectedDate || todayYmd();
+    const items = getEntriesForDay(selectedDate);
+    const content = items.length
+      ? (
+        `<div class="inspector-stack">` +
+          items.map(({ entry }) => {
+            const meta = TYPE_META[entry.type] || TYPE_META.parent;
+            return (
+              `<button type="button" class="day-entry-link ${meta.className}" data-entry-select="${escapeHtml(entry.id)}">` +
+                `<span class="entry-link-title">${escapeHtml(entry.label || 'Ohne Titel')}</span>` +
+                `<span class="entry-link-meta">${escapeHtml(meta.label)} · ${escapeHtml(formatDateRange(entry.start, entry.end || ''))}</span>` +
+              `</button>`
+            );
+          }).join('') +
+        `</div>`
+      )
+      : '<p class="inspector-empty">Keine sichtbaren Einträge an diesem Tag.</p>';
 
-    syncYearFilterOptions();
+    inspector.innerHTML =
+      `<div class="inspector-card">` +
+        `<div class="inspector-head">` +
+          `<div>` +
+            `<p class="inspector-kicker">Tagesdetails</p>` +
+            `<h3>${escapeHtml(formatLongDate(selectedDate))}</h3>` +
+          `</div>` +
+        `</div>` +
+        `<p class="inspector-text">Ein Tag kann mehrere Einträge enthalten. Wähle einen vorhandenen Eintrag zum Bearbeiten oder starte hier einen neuen Bereich.</p>` +
+        `${content}` +
+      `</div>`;
+    bindInspectorEvents();
+  }
+
+  function renderDraftInspector() {
+    const inspector = document.getElementById('calendar-inspector');
+    if (!inspector || !state.createDraft) return;
+    const draft = state.createDraft;
+    inspector.innerHTML =
+      `<div class="inspector-card is-draft-card">` +
+        `<div class="inspector-head">` +
+          `<div>` +
+            `<p class="inspector-kicker">Neuer Eintrag</p>` +
+            `<h3>Direkt im Kalender anlegen</h3>` +
+          `</div>` +
+          `<button type="button" class="admin-btn subtle small" data-action="cancel-create">Abbrechen</button>` +
+        `</div>` +
+        `<p class="inspector-text">Klicke im Kalender zuerst auf den Starttag und optional auf einen zweiten Tag für das Ende. Das eignet sich auch für lange Schließzeiten.</p>` +
+        `<label class="inspector-field">` +
+          `<span>Bezeichnung</span>` +
+          `<input type="text" data-draft-field="label" value="${escapeHtml(draft.label)}" placeholder="z. B. Sommerschließzeit" />` +
+        `</label>` +
+        `<label class="inspector-field">` +
+          `<span>Typ</span>` +
+          `${renderTypeChips(draft.type || 'parent', 'draft')}` +
+        `</label>` +
+        `<div class="inspector-field-grid">` +
+          `<label class="inspector-field">` +
+            `<span>Start</span>` +
+            `<input type="date" data-draft-field="start" value="${escapeHtml(draft.start || '')}" />` +
+          `</label>` +
+          `<label class="inspector-field">` +
+            `<span>Ende</span>` +
+            `<input type="date" data-draft-field="end" value="${escapeHtml(draft.end || '')}" />` +
+          `</label>` +
+        `</div>` +
+        `<p class="draft-range-hint">${escapeHtml(formatDateRange(draft.start || '', draft.end || ''))}</p>` +
+        `<div class="inspector-actions">` +
+          `<button type="button" class="admin-btn subtle small" data-action="clear-draft-range">Kalenderauswahl leeren</button>` +
+          `<button type="button" class="admin-btn" data-action="save-create">Eintrag übernehmen</button>` +
+        `</div>` +
+      `</div>`;
+    bindInspectorEvents();
+  }
+
+  function renderEntryInspector() {
+    const inspector = document.getElementById('calendar-inspector');
+    const entry = getEntryById(state.selectedEntryId);
+    if (!inspector || !entry) {
+      state.selectedEntryId = '';
+      renderDayInspector();
+      return;
+    }
+
+    const meta = TYPE_META[entry.type] || TYPE_META.parent;
+    inspector.innerHTML =
+      `<div class="inspector-card ${meta.className}">` +
+        `<div class="inspector-head">` +
+          `<div>` +
+            `<p class="inspector-kicker">Eintrag bearbeiten</p>` +
+            `<h3>${escapeHtml(entry.label || 'Ohne Titel')}</h3>` +
+          `</div>` +
+          `<button type="button" class="admin-btn subtle small" data-action="clear-selection">Zur Tagesansicht</button>` +
+        `</div>` +
+        `<label class="inspector-field">` +
+          `<span>Bezeichnung</span>` +
+          `<input type="text" data-entry-id="${escapeHtml(entry.id)}" data-entry-field="label" value="${escapeHtml(entry.label)}" />` +
+        `</label>` +
+        `<label class="inspector-field">` +
+          `<span>Typ</span>` +
+          `${renderTypeChips(entry.type || 'parent', 'entry', entry.id)}` +
+        `</label>` +
+        `<div class="inspector-field-grid">` +
+          `<label class="inspector-field">` +
+            `<span>Start</span>` +
+            `<input type="date" data-entry-id="${escapeHtml(entry.id)}" data-entry-field="start" value="${escapeHtml(entry.start || '')}" />` +
+          `</label>` +
+          `<label class="inspector-field">` +
+            `<span>Ende</span>` +
+            `<input type="date" data-entry-id="${escapeHtml(entry.id)}" data-entry-field="end" value="${escapeHtml(entry.end || '')}" />` +
+          `</label>` +
+        `</div>` +
+        `<p class="draft-range-hint">${escapeHtml(formatDateRange(entry.start || '', entry.end || ''))}</p>` +
+        `<div class="inspector-actions">` +
+          `<button type="button" class="admin-btn danger small" data-action="remove-entry" data-entry-id="${escapeHtml(entry.id)}">Entfernen</button>` +
+        `</div>` +
+      `</div>`;
+    bindInspectorEvents();
+  }
+
+  function renderInspector() {
+    if (state.createDraft) {
+      renderDraftInspector();
+      return;
+    }
+
+    if (state.selectedEntryId) {
+      renderEntryInspector();
+      return;
+    }
+
+    renderDayInspector();
+  }
+
+  function handleDayClick(ymd) {
+    if (!ymd) return;
+    state.selectedDate = ymd;
+
+    if (state.createDraft) {
+      if (!state.createDraft.start || state.draftStep === 'pick_start') {
+        state.createDraft.start = ymd;
+        state.createDraft.end = '';
+        state.draftStep = 'pick_end';
+      } else {
+        if (compareYmd(ymd, state.createDraft.start) < 0) {
+          state.createDraft.end = state.createDraft.start;
+          state.createDraft.start = ymd;
+        } else if (ymd === state.createDraft.start) {
+          state.createDraft.end = '';
+        } else {
+          state.createDraft.end = ymd;
+        }
+        state.draftStep = 'pick_start';
+      }
+    } else {
+      state.selectedEntryId = '';
+    }
+
+    renderEvents();
+  }
+
+  function renderEvents() {
+    const modeNote = document.getElementById('calendar-mode-note');
     syncTypeFilterButtons();
 
     const visibleEntries = getVisibleEntries();
+    ensureUiState(visibleEntries);
     setFilterHint(visibleEntries.length);
-    list.innerHTML = '';
-
-    if (state.events.length === 0) {
-      const empty = document.createElement('p');
-      empty.className = 'empty-state';
-      empty.textContent = 'Keine Kalender-Einträge im Entwurf.';
-      list.appendChild(empty);
-      return;
+    if (modeNote) {
+      modeNote.hidden = !state.createDraft;
     }
 
-    if (visibleEntries.length === 0) {
-      const empty = document.createElement('p');
-      empty.className = 'empty-state';
-      empty.textContent = 'Keine Einträge fuer den aktuellen Filter.';
-      list.appendChild(empty);
-      return;
-    }
-
-    visibleEntries.forEach(({ entry, index }) => {
-      const row = document.createElement('div');
-      row.className = `event-row type-${escapeHtml(entry.type || 'event')}`;
-      row.innerHTML =
-        '<input class="field-label" data-field="label" type="text" aria-label="Bezeichnung" value="' + escapeHtml(entry.label) + '" placeholder="Bezeichnung" />' +
-        '<div class="type-toggle" role="group" aria-label="Typ auswählen">' +
-          '<button type="button" class="type-pill event' + (entry.type === 'event' ? ' active' : '') + '" data-set-type="event">Termin</button>' +
-          '<button type="button" class="type-pill closure' + (entry.type === 'closure' ? ' active' : '') + '" data-set-type="closure">Schliesszeit</button>' +
-          '<button type="button" class="type-pill festivity' + (entry.type === 'festivity' ? ' active' : '') + '" data-set-type="festivity">Fest</button>' +
-        '</div>' +
-        '<input class="field-start" data-field="start" type="date" aria-label="Start" value="' + escapeHtml(entry.start) + '" />' +
-        '<input class="field-end" data-field="end" type="date" aria-label="Ende optional" value="' + escapeHtml(entry.end || '') + '" />' +
-        '<div class="row-actions">' +
-          '<button type="button" class="admin-btn danger tiny" data-action="remove" title="Entfernen">Entfernen</button>' +
-        '</div>';
-
-      list.appendChild(row);
-      bindEventRow(row, index);
-    });
+    renderCalendar();
+    renderInspector();
   }
 
   async function loadCollections() {
@@ -318,6 +738,9 @@ const csrfToken = session.csrf
     const shouldPreferBaseline = draftEvents.length <= 1 && publishedEvents.length <= 1 && baselineEvents.length > 1;
     state.events = sortEvents((shouldPreferBaseline ? baselineEvents : draftEvents).map((item) => ({ ...item })));
     state.source = shouldPreferBaseline ? 'baseline' : 'draft';
+    state.viewYear = new Date().getFullYear();
+    state.viewMonth = new Date().getMonth();
+    state.selectedDate = todayYmd();
     setSourceHint();
     renderEvents();
   }
@@ -335,10 +758,10 @@ const csrfToken = session.csrf
   }
 
   document.getElementById('add-event-btn')?.addEventListener('click', () => {
-    state.events.push({ id: createId('event'), label: '', type: 'event', start: todayYmd(), end: '' });
-    state.filterType = 'all';
-    state.filterYear = 'all';
-    markDraftSource();
+    const prefillDate = state.selectedDate || todayYmd();
+    state.createDraft = buildDraft(prefillDate);
+    state.draftStep = prefillDate ? 'pick_end' : 'pick_start';
+    state.selectedEntryId = '';
     renderEvents();
   });
 
@@ -349,20 +772,38 @@ const csrfToken = session.csrf
     });
   });
 
-  document.getElementById('filter-year')?.addEventListener('change', (event) => {
-    state.filterYear = event.currentTarget.value || 'all';
+  document.getElementById('clear-filters-btn')?.addEventListener('click', () => {
+    state.filterType = 'all';
+    state.viewYear = new Date().getFullYear();
+    state.viewMonth = new Date().getMonth();
     renderEvents();
   });
 
-  document.getElementById('clear-filters-btn')?.addEventListener('click', () => {
-    state.filterType = 'all';
-    state.filterYear = 'all';
+  document.getElementById('calendar-prev-btn')?.addEventListener('click', () => {
+    const next = addMonths(state.viewYear, state.viewMonth, -MONTHS_PER_PAGE);
+    state.viewYear = next.year;
+    state.viewMonth = next.month;
+    renderEvents();
+  });
+
+  document.getElementById('calendar-next-btn')?.addEventListener('click', () => {
+    const next = addMonths(state.viewYear, state.viewMonth, MONTHS_PER_PAGE);
+    state.viewYear = next.year;
+    state.viewMonth = next.month;
+    renderEvents();
+  });
+
+  document.getElementById('calendar-today-btn')?.addEventListener('click', () => {
+    const now = new Date();
+    state.viewYear = now.getFullYear();
+    state.viewMonth = now.getMonth();
+    state.selectedDate = todayYmd();
     renderEvents();
   });
 
   document.getElementById('load-live-btn')?.addEventListener('click', () => {
     if (state.publishedEvents.length === 0) {
-      setStatus('Keine Live-Termine gefunden.');
+      setStatus('Keine Live-Einträge gefunden.');
       return;
     }
     if (!window.confirm('Entwurf mit Live-Daten ersetzen? Nicht gespeicherte Änderungen gehen verloren.')) return;
@@ -415,7 +856,7 @@ const csrfToken = session.csrf
 
 <style is:global>
   .admin-shell {
-    max-width: 1100px;
+    max-width: 1440px;
     margin: 0 auto;
     display: grid;
     gap: 0.8rem;
@@ -489,27 +930,54 @@ const csrfToken = session.csrf
     cursor: pointer;
   }
 
+  .filter-chip[data-type-filter="parent"] {
+    border-color: #93c5fd;
+    color: #1e40af;
+    background: #eff6ff;
+  }
+
+  .filter-chip[data-type-filter="family"] {
+    border-color: #86efac;
+    color: #166534;
+    background: #f0fdf4;
+  }
+
+  .filter-chip[data-type-filter="child"] {
+    border-color: #fdba74;
+    color: #9a3412;
+    background: #fff7ed;
+  }
+
+  .filter-chip[data-type-filter="closure"] {
+    border-color: #fca5a5;
+    color: #b91c1c;
+    background: #fef2f2;
+  }
+
   .filter-chip.active {
     border-color: var(--ink-600);
     background: var(--ink-600);
     color: #fff;
   }
 
-  .year-filter {
-    display: grid;
-    gap: 0.18rem;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--ink-600);
+  .filter-chip.active[data-type-filter="parent"] {
+    border-color: #3b82f6;
+    background: #3b82f6;
   }
 
-  .year-filter select {
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 0.33rem 0.5rem;
-    font-size: 0.84rem;
-    min-width: 130px;
-    background: #fff;
+  .filter-chip.active[data-type-filter="family"] {
+    border-color: #16a34a;
+    background: #16a34a;
+  }
+
+  .filter-chip.active[data-type-filter="child"] {
+    border-color: #d97706;
+    background: #d97706;
+  }
+
+  .filter-chip.active[data-type-filter="closure"] {
+    border-color: #ef4444;
+    background: #ef4444;
   }
 
   .filter-hint {
@@ -519,105 +987,402 @@ const csrfToken = session.csrf
     padding: 0 0.2rem;
   }
 
-  .cms-list {
+  .admin-calendar-layout {
     display: grid;
-    gap: 0.4rem;
+    grid-template-columns: minmax(0, 1.8fr) minmax(320px, 0.9fr);
+    gap: 1rem;
+    align-items: start;
   }
 
-  .event-row {
+  .admin-calendar-panel,
+  .calendar-inspector {
     border: 1px solid var(--border);
-    border-left-width: 5px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(180deg, #fff 0%, #fbfbfb 100%);
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.05);
+  }
+
+  .admin-calendar-panel {
+    padding: 0.85rem;
+  }
+
+  .calendar-board-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .calendar-board-title,
+  .inspector-head h3 {
+    margin: 0;
+    color: var(--ink-700);
+  }
+
+  .calendar-board-note,
+  .inspector-text,
+  .draft-range-hint,
+  .inspector-empty {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .calendar-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .admin-month-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.8rem;
+  }
+
+  .admin-month-card {
+    border: 1px solid color-mix(in srgb, var(--border) 84%, #ffffff);
+    border-radius: var(--radius-md);
+    background: #fff;
+    padding: 0.7rem;
+    min-width: 0;
+  }
+
+  .admin-month-title {
+    font-weight: 800;
+    color: var(--ink-700);
+    margin-bottom: 0.55rem;
+  }
+
+  .admin-weekdays,
+  .admin-days {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.28rem;
+  }
+
+  .admin-weekdays span {
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .admin-day {
+    position: relative;
+    min-height: 46px;
+    border: 1px solid color-mix(in srgb, var(--border) 88%, #ffffff);
+    border-radius: 0.8rem;
+    background: #fff;
+    padding: 0.22rem 0.24rem;
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  }
+
+  .admin-day:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
+  }
+
+  .admin-day.is-weekend {
+    background: #fcfcfd;
+  }
+
+  .admin-day.is-selected {
+    box-shadow: 0 0 0 2px var(--ink-700);
+  }
+
+  .admin-day.is-draft {
+    background-image: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(16, 185, 129, 0.04));
+    border-color: #6ee7b7;
+  }
+
+  .admin-day.type-parent {
+    background-image: linear-gradient(180deg, rgba(59, 130, 246, 0.12), rgba(59, 130, 246, 0.03));
+    border-color: #93c5fd;
+  }
+
+  .admin-day.type-family {
+    background-image: linear-gradient(180deg, rgba(34, 197, 94, 0.12), rgba(34, 197, 94, 0.03));
+    border-color: #86efac;
+  }
+
+  .admin-day.type-child {
+    background-image: linear-gradient(180deg, rgba(217, 119, 6, 0.14), rgba(217, 119, 6, 0.03));
+    border-color: #fdba74;
+  }
+
+  .admin-day.type-closure {
+    background-image: linear-gradient(180deg, rgba(239, 68, 68, 0.12), rgba(239, 68, 68, 0.03));
+    border-color: #fca5a5;
+  }
+
+  .day-number {
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 800;
+    font-variant-numeric: proportional-nums;
+    line-height: 1;
+    color: var(--ink-700);
+  }
+
+  .day-count {
+    position: absolute;
+    top: 0.22rem;
+    right: 0.22rem;
+    min-width: 1rem;
+    padding: 0.02rem 0.18rem;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.12);
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: var(--ink-700);
+    text-align: center;
+  }
+
+  .day-markers {
+    position: absolute;
+    left: 0.24rem;
+    right: 0.24rem;
+    bottom: 0.22rem;
+    display: flex;
+    gap: 0.2rem;
+  }
+
+  .admin-day-spacer {
+    min-height: 46px;
+  }
+
+  .day-marker {
+    display: inline-block;
+    width: 0.52rem;
+    height: 0.52rem;
+    border-radius: 999px;
+  }
+
+  .day-marker.parent {
+    background: #3b82f6;
+  }
+
+  .day-marker.family {
+    background: #16a34a;
+  }
+
+  .day-marker.child {
+    background: #d97706;
+  }
+
+  .day-marker.closure {
+    background: #ef4444;
+  }
+
+  .calendar-inspector {
+    padding: 0.9rem;
+    position: sticky;
+    top: 1rem;
+  }
+
+  .inspector-card {
+    display: grid;
+    gap: 0.8rem;
+  }
+
+  .inspector-card.type-parent {
+    border-top: 4px solid #3b82f6;
+    padding-top: 0.2rem;
+  }
+
+  .inspector-card.type-family {
+    border-top: 4px solid #16a34a;
+    padding-top: 0.2rem;
+  }
+
+  .inspector-card.type-child {
+    border-top: 4px solid #d97706;
+    padding-top: 0.2rem;
+  }
+
+  .inspector-card.type-closure {
+    border-top: 4px solid #ef4444;
+    padding-top: 0.2rem;
+  }
+
+  .inspector-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.7rem;
+  }
+
+  .inspector-kicker {
+    margin: 0 0 0.18rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .inspector-stack {
+    display: grid;
+    gap: 0.55rem;
+  }
+
+  .day-entry-link {
+    display: grid;
+    gap: 0.18rem;
+    width: 100%;
+    border: 1px solid color-mix(in srgb, var(--border) 86%, #ffffff);
+    border-left-width: 4px;
     border-radius: var(--radius-sm);
     background: #fff;
-    display: grid;
-    grid-template-columns: minmax(220px, 1fr) auto 126px 126px auto;
-    grid-template-areas: 'label type start end actions';
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.42rem;
+    padding: 0.7rem 0.75rem;
+    text-align: left;
+    cursor: pointer;
   }
 
-  .event-row.type-event {
+  .day-entry-link.type-parent {
     border-left-color: #3b82f6;
   }
 
-  .event-row.type-closure {
+  .day-entry-link.type-family {
+    border-left-color: #16a34a;
+  }
+
+  .day-entry-link.type-child {
+    border-left-color: #d97706;
+  }
+
+  .day-entry-link.type-closure {
     border-left-color: #ef4444;
   }
 
-  .event-row.type-festivity {
-    border-left-color: #22c55e;
+  .entry-link-title {
+    font-weight: 700;
+    color: var(--ink-700);
   }
 
-  .field-label,
-  .field-start,
-  .field-end {
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 0.38rem 0.52rem;
-    font-size: 0.85rem;
-    min-height: 2rem;
+  .entry-link-meta {
+    color: var(--muted);
+    font-size: 0.8rem;
   }
 
-  .field-label {
-    grid-area: label;
-  }
-
-  .type-toggle {
-    grid-area: type;
-    display: flex;
-    align-items: center;
+  .inspector-field {
+    display: grid;
     gap: 0.28rem;
-    flex-wrap: wrap;
   }
 
-  .type-pill {
+  .inspector-field span {
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .inspector-field input,
+  .inspector-field select {
+    width: 100%;
+    border: 1px solid color-mix(in srgb, var(--border) 88%, #ffffff);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    padding: 0.58rem 0.68rem;
+    font-size: 0.9rem;
+    min-height: 2.55rem;
+  }
+
+  .type-chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .type-chip {
     border: 1px solid var(--border);
     border-radius: 999px;
     background: #fff;
     color: var(--ink-700);
-    font-size: 0.75rem;
+    padding: 0.52rem 0.72rem;
+    font-size: 0.84rem;
     font-weight: 700;
-    padding: 0.28rem 0.54rem;
+    line-height: 1.1;
     cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, background 0.15s, color 0.15s, border-color 0.15s;
   }
 
-  .type-pill.event.active {
-    background: #eff6ff;
-    color: #1d4ed8;
+  .type-chip:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+  }
+
+  .type-chip.type-parent {
     border-color: #93c5fd;
+    background: #eff6ff;
+    color: #1e40af;
   }
 
-  .type-pill.closure.active {
-    background: #fef2f2;
-    color: #b91c1c;
-    border-color: #fca5a5;
-  }
-
-  .type-pill.festivity.active {
+  .type-chip.type-family {
+    border-color: #86efac;
     background: #f0fdf4;
     color: #166534;
-    border-color: #86efac;
   }
 
-  .field-start {
-    grid-area: start;
+  .type-chip.type-child {
+    border-color: #fdba74;
+    background: #fff7ed;
+    color: #9a3412;
   }
 
-  .field-end {
-    grid-area: end;
+  .type-chip.type-closure {
+    border-color: #fca5a5;
+    background: #fef2f2;
+    color: #b91c1c;
   }
 
-  .row-actions {
-    grid-area: actions;
+  .type-chip.active.type-parent {
+    border-color: #3b82f6;
+    background: #3b82f6;
+    color: #fff;
+  }
+
+  .type-chip.active.type-family {
+    border-color: #16a34a;
+    background: #16a34a;
+    color: #fff;
+  }
+
+  .type-chip.active.type-child {
+    border-color: #d97706;
+    background: #d97706;
+    color: #fff;
+  }
+
+  .type-chip.active.type-closure {
+    border-color: #ef4444;
+    background: #ef4444;
+    color: #fff;
+  }
+
+  .inspector-field-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+
+  .inspector-actions {
     display: flex;
-    justify-content: flex-end;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.6rem;
   }
 
   .empty-state {
     color: var(--muted);
     margin: 0;
-    padding: 0.8rem 0.2rem;
+    padding: 1.2rem 0.2rem;
   }
 
   .admin-btn {
@@ -649,7 +1414,7 @@ const csrfToken = session.csrf
 
   .admin-btn.tiny {
     min-width: 2rem;
-    padding: 0.34rem 0.56rem;
+    padding: 0.5rem 0.72rem;
     font-size: 0.78rem;
   }
 
@@ -671,29 +1436,39 @@ const csrfToken = session.csrf
       flex-direction: column;
     }
 
-    .event-row {
-      grid-template-columns: minmax(150px, 1fr) 1fr auto;
-      grid-template-areas:
-        'label label actions'
-        'type start actions'
-        'type end actions';
-      align-items: start;
+    .admin-calendar-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .admin-month-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .calendar-inspector {
+      position: static;
     }
   }
 
   @media (max-width: 760px) {
-    .event-row {
+    .calendar-board-head,
+    .inspector-head,
+    .inspector-actions {
       grid-template-columns: 1fr;
-      grid-template-areas:
-        'label'
-        'type'
-        'start'
-        'end'
-        'actions';
+      display: grid;
     }
 
-    .row-actions {
+    .admin-month-grid,
+    .inspector-field-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .calendar-nav {
+      width: 100%;
       justify-content: flex-start;
+    }
+
+    .admin-day {
+      min-height: 42px;
     }
   }
 </style>

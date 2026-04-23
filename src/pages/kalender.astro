@@ -18,7 +18,7 @@ const eventsData = cms.events(getBaselineEvents());
     </div>
 
     <div class="highlight-box" style="margin-top: 1.5rem;">
-      <span {...cms.attrs('calendar.pageIntro')}>{cms.text('calendar.pageIntro', 'Termine, Feste und Schliesszeiten im Ueberblick')}</span>
+      <span {...cms.attrs('calendar.pageIntro')}>{cms.text('calendar.pageIntro', 'Elterntermine, Familienveranstaltungen, Kinderaktionen und Schliesszeiten im Ueberblick')}</span>
     </div>
     
     <div id="events-list" data-events-list style="margin-top: 1.5rem;">
@@ -83,6 +83,12 @@ const eventsData = cms.events(getBaselineEvents());
     display: grid;
     gap: 0.75rem;
   }
+
+  .events-note {
+    margin: -0.35rem 0 0.85rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
   
   .event-item {
     display: flex;
@@ -94,10 +100,23 @@ const eventsData = cms.events(getBaselineEvents());
     background: #fff;
     transition: transform 0.15s, box-shadow 0.15s;
   }
+
+  .event-item.is-past {
+    opacity: var(--past-fade, 0.78);
+  }
+
+  .event-item.is-past .event-date,
+  .event-item.is-past .event-type {
+    filter: saturate(0.82);
+  }
   
   .event-item:hover {
     transform: translateX(4px);
     box-shadow: var(--shadow-sm);
+  }
+
+  .event-item.is-past:hover {
+    opacity: min(calc(var(--past-fade, 0.78) + 0.08), 1);
   }
   
   .event-date {
@@ -160,12 +179,17 @@ const eventsData = cms.events(getBaselineEvents());
     color: #991b1b;
   }
   
-  .event-type.festivity {
+  .event-type.family {
     background: #bbf7d0;
     color: #166534;
   }
   
-  .event-type.event {
+  .event-type.child {
+    background: #fed7aa;
+    color: #9a3412;
+  }
+
+  .event-type.parent {
     background: #bfdbfe;
     color: #1e40af;
   }

@@ -1,5 +1,6 @@
 (function(){
   const monthNames = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+  const MAX_PAST_EVENTS = 10;
   
   function parseYMD(s){
     if(!s) return null;
@@ -30,6 +31,14 @@
     }
     return fmtDate(s) + ' – ' + fmtDate(e);
   }
+
+  function eventEndDate(event){
+    return parseYMD(event.end || event.start);
+  }
+
+  function clamp(value, min, max){
+    return Math.min(max, Math.max(min, value));
+  }
   
   function buildEventsList(container){
     const dataEl = container.querySelector('[data-events]');
@@ -40,7 +49,7 @@
     
     const events = data.events || [];
     if(!events.length){
-      container.innerHTML = '<div class="no-events">Keine Termine vorhanden.</div>';
+      container.innerHTML = '<div class="no-events">Keine Einträge vorhanden.</div>';
       return;
     }
     
@@ -51,32 +60,40 @@
     });
     
     const typeLabels = {
-      event: 'Termin',
-      closure: 'Schließzeit',
-      festivity: 'Fest'
+      parent: 'Elterntermin',
+      family: 'Familienveranstaltung',
+      child: 'Kinderaktion',
+      closure: 'Schließzeit'
     };
     
     const now = new Date();
     now.setHours(0,0,0,0);
     
     const futureEvents = events.filter(e => {
-      const end = parseYMD(e.end || e.start);
+      const end = eventEndDate(e);
       return end >= now;
     });
     
-    const pastEvents = events.filter(e => {
-      const end = parseYMD(e.end || e.start);
-      return end < now;
-    });
+    const pastEvents = events
+      .filter(e => {
+        const end = eventEndDate(e);
+        return end < now;
+      })
+      .sort((a, b) => eventEndDate(b) - eventEndDate(a))
+      .slice(0, MAX_PAST_EVENTS);
     
-    function renderEvents(list, title, collapsed = false){
+    function renderEvents(list, title, options = {}){
       if(!list.length) return '';
+
+      const isPast = !!options.isPast;
+      const stepCount = Math.max(list.length - 1, 1);
       
-      const items = list.map(e => {
+      const items = list.map((e, index) => {
         const s = parseYMD(e.start);
-        const type = e.type || 'event';
+        const type = e.type || 'parent';
+        const fade = isPast ? clamp(1 - (index / stepCount) * 0.45, 0.55, 1) : 1;
         return `
-          <div class="event-item" data-type="${type}">
+          <div class="event-item${isPast ? ' is-past' : ''}" data-type="${type}" style="--past-fade:${fade.toFixed(2)}">
             <div class="event-date">
               <div class="day">${s.getDate()}</div>
               <div class="month">${monthNames[s.getMonth()]}</div>
@@ -85,7 +102,7 @@
               <div class="event-title">${e.label}</div>
               <div class="event-duration">${fmtRange(e.start, e.end || e.start)}</div>
             </div>
-            <span class="event-type ${type}">${typeLabels[type] || 'Termin'}</span>
+            <span class="event-type ${type}">${typeLabels[type] || 'Eintrag'}</span>
           </div>
         `;
       }).join('');
@@ -93,22 +110,24 @@
       return `
         <div class="events-section">
           ${title ? `<h3 class="text-lg font-semibold mb-3">${title}</h3>` : ''}
+          ${isPast ? `<p class="events-note">Nur die letzten ${MAX_PAST_EVENTS} vergangenen Einträge, von neu nach alt zunehmend abgeschwächt.</p>` : ''}
           <div class="events-list">${items}</div>
         </div>
       `;
     }
     
     container.innerHTML = `
-      <div class="events-header">
-        <div class="events-filter">
-          <button class="filter-btn active" data-filter="all">Alle</button>
-          <button class="filter-btn" data-filter="event">Termine</button>
+        <div class="events-header">
+          <div class="events-filter">
+            <button class="filter-btn active" data-filter="all">Alle</button>
+          <button class="filter-btn" data-filter="parent">Elterntermine</button>
+          <button class="filter-btn" data-filter="family">Familienveranstaltungen</button>
+          <button class="filter-btn" data-filter="child">Kinderaktionen</button>
           <button class="filter-btn" data-filter="closure">Schließzeiten</button>
-          <button class="filter-btn" data-filter="festivity">Feste</button>
         </div>
       </div>
-      ${renderEvents(futureEvents, 'Kommende Termine')}
-      ${pastEvents.length ? renderEvents(pastEvents, 'Vergangene Termine', true) : ''}
+      ${renderEvents(futureEvents, 'Kommende Einträge')}
+      ${pastEvents.length ? renderEvents(pastEvents, 'Vergangene Einträge', { isPast: true }) : ''}
     `;
     
     container.querySelectorAll('.filter-btn').forEach(btn => {
