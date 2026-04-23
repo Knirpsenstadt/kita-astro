@@ -2,6 +2,8 @@
   'use strict';
 
   const EDIT_SELECTOR = '[data-cms-editable][data-cms-key]';
+  const TOOLBAR_ID = 'cms-inline-toolbar';
+  const STYLE_ID = 'cms-inline-style';
   const state = {
     csrfToken: null,
     mode: 'published',
@@ -60,10 +62,24 @@
     });
   }
 
+  function getToolbar() {
+    return document.getElementById(TOOLBAR_ID);
+  }
+
+  function removeToolbar() {
+    getToolbar()?.remove();
+    document.body.classList.remove('cms-inline-active');
+  }
+
   function setupEditableElement(element) {
+    if (!(element instanceof HTMLElement) || element.dataset.cmsInlineBound === 'true') {
+      return;
+    }
+
     const key = element.dataset.cmsKey;
     if (!key) return;
 
+    element.dataset.cmsInlineBound = 'true';
     element.setAttribute('contenteditable', 'true');
     element.setAttribute('spellcheck', 'false');
     element.classList.add('cms-inline-editable');
@@ -122,6 +138,9 @@
   }
 
   function installEditableLinkGuard() {
+    if (window.__cmsInlineLinkGuardInstalled) return;
+
+    window.__cmsInlineLinkGuardInstalled = true;
     document.addEventListener(
       'click',
       function (event) {
@@ -154,45 +173,24 @@
     );
   }
 
-  async function attachToolbar() {
-    const status = await api('/api/admin/status');
-    if (!status.authenticated) return;
-
-    state.csrfToken = status.csrfToken;
-    state.mode = status.mode;
-
-    const root = document.createElement('div');
-    root.className = 'cms-inline-toolbar';
-    root.innerHTML =
-      '<div class="cms-inline-toolbar__inner">' +
-      '<span class="cms-inline-badge">Inline CMS</span>' +
-      '<span class="cms-inline-mode" id="cms-inline-mode"></span>' +
-      '<span class="cms-inline-status" id="cms-inline-status" data-tone="muted"></span>' +
-      '<button type="button" id="cms-mode-draft">Entwurf</button>' +
-      '<button type="button" id="cms-mode-live">Live</button>' +
-      '<button type="button" id="cms-publish">Publizieren</button>' +
-      '<a href="/admin">Admin</a>' +
-      '<button type="button" id="cms-logout">Abmelden</button>' +
-      '</div>';
-    document.body.prepend(root);
-    document.body.classList.add('cms-inline-active');
-
-    const modeNode = document.getElementById('cms-inline-mode');
-    if (modeNode) {
-      modeNode.textContent = state.mode === 'draft' ? 'Modus: Entwurfsvorschau' : 'Modus: Live';
+  function bindToolbarActions(root) {
+    if (!(root instanceof HTMLElement) || root.dataset.cmsInlineBound === 'true') {
+      return;
     }
 
-    document.getElementById('cms-mode-draft')?.addEventListener('click', async function () {
+    root.dataset.cmsInlineBound = 'true';
+
+    root.querySelector('#cms-mode-draft')?.addEventListener('click', async function () {
       await setMode('draft');
       window.location.reload();
     });
 
-    document.getElementById('cms-mode-live')?.addEventListener('click', async function () {
+    root.querySelector('#cms-mode-live')?.addEventListener('click', async function () {
       await setMode('published');
       window.location.reload();
     });
 
-    document.getElementById('cms-publish')?.addEventListener('click', async function () {
+    root.querySelector('#cms-publish')?.addEventListener('click', async function () {
       setStatus('Publiziere ...', 'muted');
       try {
         await publishDraft();
@@ -206,14 +204,60 @@
       }
     });
 
-    document.getElementById('cms-logout')?.addEventListener('click', async function () {
+    root.querySelector('#cms-logout')?.addEventListener('click', async function () {
       await fetch('/api/admin/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
       window.location.reload();
     });
   }
 
+  function updateToolbarMode() {
+    const modeNode = document.getElementById('cms-inline-mode');
+    if (modeNode) {
+      modeNode.textContent = state.mode === 'draft' ? 'Modus: Entwurfsvorschau' : 'Modus: Live';
+    }
+  }
+
+  async function ensureToolbar() {
+    const status = await api('/api/admin/status');
+    if (!status.authenticated) {
+      removeToolbar();
+      return false;
+    }
+
+    state.csrfToken = status.csrfToken;
+    state.mode = status.mode;
+
+    let root = getToolbar();
+    if (!root) {
+      root = document.createElement('div');
+      root.id = TOOLBAR_ID;
+      root.className = 'cms-inline-toolbar';
+      root.innerHTML =
+        '<div class="cms-inline-toolbar__inner">' +
+        '<span class="cms-inline-badge">Inline CMS</span>' +
+        '<span class="cms-inline-mode" id="cms-inline-mode"></span>' +
+        '<span class="cms-inline-status" id="cms-inline-status" data-tone="muted"></span>' +
+        '<button type="button" id="cms-mode-draft">Entwurf</button>' +
+        '<button type="button" id="cms-mode-live">Live</button>' +
+        '<button type="button" id="cms-publish">Publizieren</button>' +
+        '<a href="/admin">Admin</a>' +
+        '<button type="button" id="cms-logout">Abmelden</button>' +
+        '</div>';
+      document.body.prepend(root);
+    }
+
+    document.body.classList.add('cms-inline-active');
+    bindToolbarActions(root);
+    updateToolbarMode();
+
+    return true;
+  }
+
   function injectStyles() {
+    if (document.getElementById(STYLE_ID)) return;
+
     const style = document.createElement('style');
+    style.id = STYLE_ID;
     style.textContent =
       '.cms-inline-toolbar{position:fixed;top:0;left:0;right:0;z-index:10000;background:#10231c;color:#fff;border-bottom:2px solid #2f855a;padding:.65rem 1rem;}' +
       '.cms-inline-toolbar__inner{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;max-width:1300px;margin:0 auto;}' +
@@ -237,8 +281,10 @@
 
   async function init() {
     try {
-      await attachToolbar();
+      const authenticated = await ensureToolbar();
+      if (!authenticated) return;
     } catch {
+      removeToolbar();
       return;
     }
 
@@ -247,5 +293,6 @@
     document.querySelectorAll(EDIT_SELECTOR).forEach(setupEditableElement);
   }
 
+  document.addEventListener('astro:page-load', init);
   init();
 })();
