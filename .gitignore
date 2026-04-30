@@ -27,3 +27,6 @@ cms-data/
 # editors
 .idea/
 .vscode/
+
+# playwright
+output/

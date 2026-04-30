@@ -11,9 +11,9 @@ const sliderImages = images.length ? images : DEFAULT_CAROUSEL_IMAGES;
 
 <div class="slider-wrap">
   <div class="my-slider">
-    {sliderImages.map((src) => (
+    {sliderImages.map((src, index) => (
       <div>
-        <img src={src} alt="Kita impression" loading="lazy" class="w-full object-cover rounded-xl" />
+        <img src={src} alt={`Eindruck aus der Kita Knirpsenstadt ${index + 1}`} loading="lazy" class="w-full object-cover rounded-xl" />
       </div>
     ))}
   </div>
